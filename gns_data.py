@@ -2,6 +2,7 @@
 
 import json
 
+
 ## Getting lab config from .gns3 file.
 def get_json_files(path):
     with open(path) as f:
@@ -17,7 +18,8 @@ def get_json_files(path):
     nodes_fin = get_nodes_info(dct_nodes)
 
     return nodes_fin, links_fin
-    
+
+
 ## Get needed link info from links dct.
 def get_links_info(links):
     links_info = []     ## tmp connection lst.
@@ -31,20 +33,24 @@ def get_links_info(links):
         links_info.append(connection_tp)
     return links_info
 
+
 ## Get needed node info from nodes dct.
 def get_nodes_info(nodes):
     nodes_info = []
     for node in nodes:
         if "Switch" in node["name"]:
             pass
+        elif node["console"] == None:
+            pass
         else:
             gns_id = node["node_id"]
             console_port = node["console"]
             node_name = node["name"]
             tmp_tuple = (gns_id, console_port, node_name)
-            ID = id(tmp_tuple)
-            nodes_info.append((ID, tmp_tuple))
+            dev_id = id(tmp_tuple)
+            nodes_info.append((dev_id, tmp_tuple))
     return nodes_info
+
 
 ## Only for debug purpose.
 def show_in_file(dct: dict, file: str):
@@ -52,6 +58,7 @@ def show_in_file(dct: dict, file: str):
         f.write(json.dumps(dct, indent = 4))
     with open("all_info.json", "a") as f:
         f.write(json.dumps(dct, indent = 4))
+
 
 def main():
     pass
