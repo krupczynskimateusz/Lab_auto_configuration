@@ -3,8 +3,8 @@
 import ipaddress
 
 class Network():
+    pass
 
-    ip_prefix = ipaddress.ip_network("192.168.10.0/25")
 
 class Device():
 
@@ -12,12 +12,11 @@ class Device():
         self.ID = ID
         self.gns_id = gns_id
         self.name = name
-
-
+    
+    @property
+    def ip_mgmnt(self, network):
+        Network
 def main():
-    ip_prefix = ipaddress.ip_network("192.168.10.0/25")
-    for element in ip_prefix.hosts():
-        print(element)
     pass
 
 if __name__ == "__main__":
