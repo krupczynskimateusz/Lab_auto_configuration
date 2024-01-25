@@ -4,7 +4,8 @@ import time
 
 class Device():
 
-    _ipv4_address_pool = [f"192.168.10.{x}" for x in range(11, 40)]
+    ipv4_addresses_pool = [f"192.168.10.{x}" for x in range(11, 40)]
+    used_addresses = []
 
     def __init__(self, dev_id, gns_id, name, console_port):
         self.dev_id = dev_id
@@ -12,19 +13,27 @@ class Device():
         self.name = name
         self.console_port = console_port
         self.vendor = None
+        self.ip_mgmt = Device.ipv4_addresses_pool[0]
 
-    @property
-    def ip_mgmt(self):
-        ip = Device._ipv4_address_pool[0]
-        return ip
+        Device.used_addresses.append(self.ip_mgmt)
+        Device.ipv4_addresses_pool.remove(self.ip_mgmt)
 
+    @staticmethod
+    def show_used_addresses():
+        return Device.used_addresses
 
+    @staticmethod
+    def show_free_addresses():
+        return Device.ipv4_addresses_pool
+    
 
-# class vIOS(Device):
+class IOS(Device):
 
-#     def __init__(self, dev_id, gns_id, name, console_port):
-#         super().__init__(dev_id, gns_id, name, console_port)
-#         self.vendor = "vIOS"
+    def __init__(self, dev_id, gns_id, name, console_port):
+        super().__init__(dev_id, gns_id, name, console_port)
+        self.vendor = "vIOS"
+        self.username = "cisco"
+        self.password = "cisco"
 
 
 
@@ -35,7 +44,7 @@ def create_devObj(dct):
         gns_id = dev[1][0]
         name = dev[1][1]
         console_port = dev[1][2]
-        node = Device(dev_id, gns_id, name, console_port)
+        node = IOS(dev_id, gns_id, name, console_port)
         nodes_lst.append(node)
     return nodes_lst
 
