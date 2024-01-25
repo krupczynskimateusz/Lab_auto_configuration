@@ -7,7 +7,9 @@ class Device():
     ipv4_addresses_pool = [f"192.168.10.{x}" for x in range(11, 40)]
     used_addresses = []
 
-    def __init__(self, dev_id, gns_id, name, console_port):
+    dev_lst = []
+
+    def __init__(self, dev_id: int, gns_id: str, name: str, console_port: int):
         self.dev_id = dev_id
         self.gns_id = gns_id
         self.name = name
@@ -17,6 +19,7 @@ class Device():
 
         Device.used_addresses.append(self.ip_mgmt)
         Device.ipv4_addresses_pool.remove(self.ip_mgmt)
+        Device.dev_lst.append(self)
 
     @staticmethod
     def show_used_addresses():
@@ -29,7 +32,7 @@ class Device():
 
 class IOS(Device):
 
-    def __init__(self, dev_id, gns_id, name, console_port):
+    def __init__(self, dev_id: int, gns_id: str, name: str, console_port: int):
         super().__init__(dev_id, gns_id, name, console_port)
         self.vendor = "vIOS"
         self.username = "cisco"

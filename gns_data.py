@@ -38,26 +38,21 @@ def get_links_info(links):
 def get_nodes_info(nodes):
     nodes_info = []
     for node in nodes:
-        if "Switch" in node["name"]:
-            pass
-        elif node["console"] == None:
-            pass
-        else:
-            gns_id = node["node_id"]
-            console_port = node["console"]
-            node_name = node["name"]
-            tmp_tuple = (gns_id, console_port, node_name)
-            dev_id = id(tmp_tuple)
-            nodes_info.append((dev_id, tmp_tuple))
+        gns_id = node["node_id"]
+        console_port = node["console"]
+        node_name = node["name"]
+        tmp_tuple = (gns_id, console_port, node_name)
+        dev_id = id(tmp_tuple)
+        nodes_info.append((dev_id, tmp_tuple))
     return nodes_info
 
 
 ## Only for debug purpose.
-def show_in_file(dct: dict, file: str):
-    with open(file, "w") as f:
+def show_in_file(dct: dict, path: str):
+    from pathlib import Path
+    with open(path, "w") as f:
         f.write(json.dumps(dct, indent = 4))
-    with open("all_info.json", "a") as f:
-        f.write(json.dumps(dct, indent = 4))
+    my_file = Path(path)
 
 
 def main():

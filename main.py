@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from gns_data import get_json_files
-from other import nice_print, show_in_file
+from gns_data import get_json_files, show_in_file
+from other import nice_print
 from my_system import Device, create_devObj
 from connection import basic_config, Telnet_Conn
 import time
@@ -11,8 +11,14 @@ import time
 def main():
     
     ## Get info about links and nodes in lab.
-    path = "63e3307d-e2c5-499e-a5b7-ddac641770af/network_automation.gns3"
+    path = "gns3_file/network_automation.gns3"
     dct_nodes, dct_links = get_json_files(path)
+    
+    path1 = "file/dct_nodes.json"
+    path2 = "file/dct_links.json"
+
+    show_in_file(dct_nodes, path1)
+    show_in_file(dct_links, path2)
 
     ## Create device with information from lab.
     lst_devObj = create_devObj(dct_nodes)
@@ -27,10 +33,7 @@ def main():
     # print(lst_devObj[0].console_port)
     # print(lst_devObj[0].name)
 
-    tc = Telnet_Conn(lst_devObj[0])
-    tc.connect()
-    tc.send(b"\n")
-    basic_config(lst_devObj[0])
+    # basic_config(lst_devObj[0])
     
 
 
