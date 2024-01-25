@@ -3,7 +3,7 @@
 from telnetlib import Telnet
 from netmiko import ConnectHandler
 from time import sleep
-from commands import Command
+from commands import create_basic_config
 
 
 class Telnet_Conn():
@@ -35,24 +35,34 @@ class Telnet_Conn():
     
     def send(self, command, timeout = 0.5):
         self.connect()
-        self.tc.write(command)
+
+        command = command + "\n"
+        self.tc.write(command.encode())
         sleep(timeout)
+
+        self.close()
     
     def send_lst(self, command_lst, timeout = 0.5):
         self.connect()
+
         for command in command_lst:
             command = command + "\n"
             self.tc.write(command.encode())
             sleep(timeout)
+
         self.close()
+
+    def show_all(self):
+        return self.tc.read_all()
 
 
 
 def basic_config(dev):
     tc = Telnet_Conn(dev)
-    tc.connect()
-    command_lst = Command(dev.vendor)
-    tc.send_lst(command_lst)
+    # command_lst = create_basic_config(dev)
+    # tc.send_lst(command_lst)
+    tc.send("show ip int brief")
+    print(tc.show_all())
 
 
 def main():
