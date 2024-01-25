@@ -42,8 +42,8 @@ def create_devObj(dct):
     for dev in dct:
         dev_id = dev[0]
         gns_id = dev[1][0]
-        name = dev[1][1]
-        console_port = dev[1][2]
+        console_port = dev[1][1]
+        name = dev[1][2]
         node = IOS(dev_id, gns_id, name, console_port)
         nodes_lst.append(node)
     return nodes_lst
