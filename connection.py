@@ -3,6 +3,7 @@
 from telnetlib import Telnet
 from netmiko import ConnectHandler
 from time import sleep
+from commands import Command
 
 
 class Telnet_Conn():
@@ -29,23 +30,33 @@ class Telnet_Conn():
         else:
             pass
     
+    def close(self):
+        self.tc.close()
+    
     def send(self, command, timeout = 0.5):
+        self.connect()
         self.tc.write(command)
         sleep(timeout)
+    
+    def send_lst(self, command_lst, timeout = 0.5):
+        self.connect()
+        for command in command_lst:
+            command = command + "\n"
+            self.tc.write(command.encode())
+            sleep(timeout)
+        self.close()
 
 
-commands = "Super\n"
 
 def basic_config(dev):
-    print(dev.ip_mgmt)
-    tc = Telnet(dev)
-    tc.write(commands.encode())
+    tc = Telnet_Conn(dev)
+    tc.connect()
+    command_lst = Command(dev.vendor)
+    tc.send_lst(command_lst)
 
 
 def main():
-    tc = Telnet(host = "192.168.10.126", port = "5000")
-    tc.write(b"\n")
-    print(tc.read_until(b"R1"))
+    pass
 
 if __name__ == "__main__":
     main()
