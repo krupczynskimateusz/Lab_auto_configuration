@@ -37,13 +37,22 @@ def get_links_info(links):
 ## Get needed node info from nodes dct.
 def get_nodes_info(nodes):
     nodes_info = []
+
     for node in nodes:
         gns_id = node["node_id"]
         console_port = node["console"]
         node_name = node["name"]
-        tmp_tuple = (gns_id, console_port, node_name)
+
+        if "hda_disk_image" in node["properties"].keys():
+            if "vios-adventerprisek9-m." in node["properties"]["hda_disk_image"]:
+                vendor = "vIOS"
+        else:
+            vendor = None
+
+        tmp_tuple = (gns_id, console_port, node_name, vendor)
         dev_id = id(tmp_tuple)
         nodes_info.append((dev_id, tmp_tuple))
+
     return nodes_info
 
 

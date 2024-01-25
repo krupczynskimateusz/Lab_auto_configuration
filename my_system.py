@@ -15,11 +15,15 @@ class Device():
         self.name = name
         self.console_port = console_port
         self.vendor = None
-        self.ip_mgmt = Device.ipv4_addresses_pool[0]
-
-        Device.used_addresses.append(self.ip_mgmt)
-        Device.ipv4_addresses_pool.remove(self.ip_mgmt)
+        self.ip_mgmt = None
         Device.dev_lst.append(self)
+
+    @classmethod
+    def get_ip_address(cls, vendor):
+        ip = cls.ipv4_addresses_pool[0]
+        cls.used_addresses.append(ip)
+        cls.ipv4_addresses_pool.remove(ip)
+        return ip
 
     @staticmethod
     def show_used_addresses():
@@ -37,6 +41,7 @@ class IOS(Device):
         self.vendor = "vIOS"
         self.username = "cisco"
         self.password = "cisco"
+        self.ip_mgmt = Device.get_ip_address(self)
 
 
 
@@ -47,7 +52,10 @@ def create_devObj(dct):
         gns_id = dev[1][0]
         console_port = dev[1][1]
         name = dev[1][2]
-        node = IOS(dev_id, gns_id, name, console_port)
+        if "vIOS" is dev[1][3]:
+            node = IOS(dev_id, gns_id, name, console_port)
+        else:
+            node = Device(dev_id, gns_id, name, console_port)
         nodes_lst.append(node)
     return nodes_lst
 
