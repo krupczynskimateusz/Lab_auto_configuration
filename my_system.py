@@ -13,7 +13,6 @@ class Network():
 
     def __init__(self, links):
         self.links = links
-        print(self.links)
 
 
     @classmethod
@@ -24,11 +23,13 @@ class Network():
         return ip
 
 
-    def connection_create(self, gns_id):
-        print(gns_id)
-        # for link in self.links:
-        #     if gns_id == link[1][1] or gns_id == link[2][1]:
-        #         return link
+    def my_links(self, gns_id):
+        my_links = []
+        for link in self.links:
+            for node in link:
+                if node[0] == gns_id:
+                    my_links.append(link)
+        return my_links
 
 
 
@@ -40,13 +41,11 @@ class Device():
     def __init__(
             self,
             network: object,
-            dev_id: int,
             gns_id: str,
             name: str,
             console_port: int
             ):
         self.network = network
-        self.dev_id = dev_id
         self.gns_id = gns_id
         self.name = name
         self.console_port = console_port
@@ -54,6 +53,10 @@ class Device():
         self.ip_mgmt = None
         self.links = None
         Device.dev_lst.append(self)
+
+
+    def get_links(self):
+        return self.network.connection_create(self.gns_id)
 
 
     @staticmethod
@@ -66,11 +69,6 @@ class Device():
         return Device.ipv4_addresses_pool
 
 
-    def get_links(self):
-        print(self.gns_id)
-        return Network.connection_create(self.gns_id)
-
-
 
 class IOS(Device):
 
@@ -78,12 +76,11 @@ class IOS(Device):
     def __init__(
             self,
             network: object,
-            dev_id: int,
             gns_id: str,
             name: str,
             console_port: int
             ):
-        super().__init__(network, dev_id, gns_id, name, console_port)
+        super().__init__(network, gns_id, name, console_port)
         self.vendor = "vIOS"
         self.username = "cisco"
         self.password = "cisco"
@@ -92,20 +89,21 @@ class IOS(Device):
 
 
 def create_system(nodes, links):
-    network = Network(links)
+
+    network_obj = Network(links)
     nodes_lst = []
 
     for dev in nodes:
-        dev_id = dev[0]
-        gns_id = dev[1][0]
-        console_port = dev[1][1]
-        name = dev[1][2]
+        network = network_obj.my_links(dev[0])
+        gns_id = dev[0]
+        console_port = dev[1]
+        name = dev[2]
 
-        if "vIOS" == dev[1][3]:
-            node = IOS(network, dev_id, gns_id, name, console_port)
+        if "vIOS" == dev[3]:
+            node = IOS(network, gns_id, name, console_port)
 
         else:
-            node = Device(network, dev_id, gns_id, name, console_port)
+            node = Device(network, gns_id, name, console_port)
         nodes_lst.append(node)
 
     return nodes_lst

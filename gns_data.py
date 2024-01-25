@@ -23,8 +23,8 @@ def get_json_files(path):
 ## Get needed link info from links dct.
 def get_links_info(links):
     links_info = []     ## tmp connection lst.
-    for conn_id, link in enumerate(links, start = 1):
-        connection = [conn_id]
+    for link in links:
+        connection = []
         for node in link["nodes"]:
             id = node["node_id"]
             int_name = node["label"]["text"]
@@ -50,8 +50,7 @@ def get_nodes_info(nodes):
             vendor = None
 
         tmp_tuple = (gns_id, console_port, node_name, vendor)
-        dev_id = id(tmp_tuple)
-        nodes_info.append((dev_id, tmp_tuple))
+        nodes_info.append(tmp_tuple)
 
     return nodes_info
 

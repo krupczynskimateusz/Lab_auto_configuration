@@ -6,21 +6,26 @@ from time import sleep
 from commands import create_basic_config
 
 
+
 class Telnet_Conn():
 
+
     gns_server_ip = "192.168.10.126"
+
 
     def __init__(self, devobj):
         self.host = Telnet_Conn.gns_server_ip
         self.port = devobj.console_port
         self.username = devobj.username
         self.password = devobj.password
-    
+
+
     def connect(self):
         self.tc = Telnet(
             host = self.host,
             port = str(self.port)
             )
+
 
     def authenticate(self, output):
         if "User" in output or "user" in output:
@@ -29,10 +34,22 @@ class Telnet_Conn():
             self.tc.write(self.password.encode(), b"\n")
         else:
             pass
-    
+
+
     def close(self):
         self.tc.close()
-    
+
+
+    def test_send(self, timeout = 0.5):
+        self.connect()
+
+        command = "\n\n\n\n"
+        self.tc.write(command.encode())
+        sleep(timeout)
+
+        self.close()
+
+
     def send(self, command, timeout = 0.5):
         self.connect()
 
@@ -41,28 +58,35 @@ class Telnet_Conn():
         sleep(timeout)
 
         self.close()
-    
-    def send_lst(self, command_lst, timeout = 0.5):
+
+
+    def send_lst(self, commands_lst, timeout = 0.5):
         self.connect()
 
-        for command in command_lst:
-            command = command + "\n"
-            self.tc.write(command.encode())
-            sleep(timeout)
+        for cmd in commands_lst:
+            if isinstance(cmd, list):
+                command = cmd[0] + "\n"
+                self.tc.write(command.encode())
+                sleep(cmd[1])
+            else:
+                cmd = cmd + "\n"
+                self.tc.write(cmd.encode())
+                sleep(timeout)
 
         self.close()
+
 
     def show_all(self):
         return self.tc.read_all()
 
 
 
-def basic_config(dev):
+def start_basic_config(dev):
+    command_obj = create_basic_config(dev) ## -> commands.py
     tc = Telnet_Conn(dev)
-    # command_lst = create_basic_config(dev)
-    # tc.send_lst(command_lst)
-    tc.send("show ip int brief")
-    print(tc.show_all())
+    tc.test_send()
+    # tc.send_lst(command_obj.basic_config())
+    # tc.send_lst(command_obj.ssh_config())
 
 
 def main():
