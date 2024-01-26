@@ -14,7 +14,7 @@ import commands
 def main():
     
     ## Get info about links and nodes in lab.
-    path = "gns3_file/network_automation.gns3"
+    path = "gns3_file/automation_test.gns3"
     dct_nodes, dct_links = get_json_files(path)
     # show_in_file(dct_nodes, "file/dct_nodes.json")
     # show_in_file(dct_links, "file/dct_links.json")

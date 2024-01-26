@@ -83,16 +83,16 @@ class Command_IOS(Command):
         return lst_commands
 
 
-    def create_config_interface(self):
+    def create_ip_mgmnt(self):
         connections = Command.interface(self)
         lst_commands = ["conf t"]
-        print(self.gns_id)
+
         for connection in connections:
-            # print(connection[1])
             num = Command.give_dev_num(connection[1])
-            # print("Create config: ", num)
+
             if  num == None:
                 pass
+
             elif num > self.num:
                 lst_commands.append(f"interface {connection[0]}")
                 tmp = [
@@ -101,6 +101,32 @@ class Command_IOS(Command):
                     f"255.255.255.0"
                     ]
                 lst_commands.append("".join(tmp))
+                lst_commands.append("no shutdown")
+
+        lst_commands.append("end")
+        return lst_commands
+
+
+    def create_config_interface(self):
+        connections = Command.interface(self)
+        lst_commands = ["conf t"]
+
+        for connection in connections:
+            num = Command.give_dev_num(connection[1])
+
+            if  num == None:
+                pass
+
+            elif num > self.num:
+                lst_commands.append(f"interface {connection[0]}")
+                tmp = [
+                    f"ip address 10.{self.num}",
+                    f".{num}.{self.num} ",
+                    f"255.255.255.0"
+                    ]
+                lst_commands.append("".join(tmp))
+                lst_commands.append("no shutdown")
+
             elif num < self.num:
                 lst_commands.append(f"interface {connection[0]}")
                 tmp = [
@@ -109,6 +135,8 @@ class Command_IOS(Command):
                     f"255.255.255.0"
                     ]
                 lst_commands.append("".join(tmp))
+                lst_commands.append("no shutdown")
+
         lst_commands.append("end")
         return lst_commands
 
