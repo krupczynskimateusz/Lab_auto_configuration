@@ -11,6 +11,7 @@ class Command():
         self.gns_id = devobj.gns_id
         self.vendor = devobj.vendor
         self.ip_mgmt = devobj.ip_mgmt
+        self.ip_mgmt_mask = devobj.ip_mgmt_mask
         self.name = devobj.name
         self.network = devobj.network
         self.num = devobj.num
@@ -62,11 +63,29 @@ class Command_IOS(Command):
         super().__init__(devobj)
 
 
+    def get_mask(self):
+        if self.ip_mgmt_mask == "21":
+            return "255.255.248.0"
+        elif self.ip_mgmt_mask == "22":
+            return "255.255.252.0"
+        elif self.ip_mgmt_mask == "23":
+            return "255.255.254.0"
+        elif self.ip_mgmt_mask == "24":
+            return "255.255.255.0"
+        elif self.ip_mgmt_mask == "25":
+            return "255.255.255.128"
+        elif self.ip_mgmt_mask == "26":
+            return "255.255.255.192"
+        elif self.ip_mgmt_mask == "27":
+            return "255.255.255.224"
+
+
     def basic_config(self):
         lst_commands = [
             "conf t",
             f"hostname {self.name}",
             "ip domain name lab.home",
+            "username cisco privilege 15 secret cisco",
             "end"
         ]
         return lst_commands
@@ -83,15 +102,18 @@ class Command_IOS(Command):
         return lst_commands
 
 
-    def create_ip_mgmnt(self):
+    def create_ip_mgmt(self):
         connections = Command.interface(self)
-        lst_commands = ["conf t"]
-        print(connections[-1])
-        # for connection in connections:
-        #     # print(connection)
-        #     # print(self.ip_mgmt)
-
-        lst_commands.append("end")
+        lst_commands = [
+            "conf t",
+            "vrf definition mgmt",
+            "exit",
+            f"interface {connections[-1][0]}",
+            "vrf forwarding mgmt",
+            f"ip address {self.ip_mgmt} {self.get_mask()}",
+            "no shutdown",
+            "end"
+            ]
         return lst_commands
 
 

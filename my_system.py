@@ -8,6 +8,7 @@ class Network():
 
 
     ipv4_addresses_pool = [f"192.168.10.{x}" for x in range(11, 40)]
+    ipv4_address_mask = "25"
     used_addresses = []
 
 
@@ -30,8 +31,12 @@ class Network():
         cls.used_addresses.append(ip)
         cls.ipv4_addresses_pool.remove(ip)
         return ip
-    
-    
+
+    @classmethod
+    def get_ip_address_mask(cls):
+        return cls.ipv4_address_mask
+
+
     @staticmethod
     def show_used_addresses():
         return Device.used_addresses
@@ -61,6 +66,7 @@ class Device():
         self.console_port = console_port
         self.vendor = None
         self.ip_mgmt = None
+        self.ip_mgmt_mask = None
         self.links = None
         self.num = None
         Device.dev_lst.append(self)
@@ -97,6 +103,7 @@ class IOS(Device):
         self.username = "cisco"
         self.password = "cisco"
         self.ip_mgmt = Network.get_ip_address()
+        self.ip_mgmt_mask = Network.get_ip_address_mask()
         self.num = Device.give_number()
         # print(self.gns_id, ":", self.num)
 
