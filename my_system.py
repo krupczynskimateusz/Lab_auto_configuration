@@ -15,14 +15,6 @@ class Network():
         self.links = links
 
 
-    @classmethod
-    def get_ip_address(cls, vendor):
-        ip = cls.ipv4_addresses_pool[0]
-        cls.used_addresses.append(ip)
-        cls.ipv4_addresses_pool.remove(ip)
-        return ip
-
-
     def my_links(self, gns_id):
         my_links = []
         for link in self.links:
@@ -30,6 +22,14 @@ class Network():
                 if node[0] == gns_id:
                     my_links.append(link)
         return my_links
+
+
+    @classmethod
+    def get_ip_address(cls, vendor):
+        ip = cls.ipv4_addresses_pool[0]
+        cls.used_addresses.append(ip)
+        cls.ipv4_addresses_pool.remove(ip)
+        return ip
 
 
 
