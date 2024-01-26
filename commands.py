@@ -86,22 +86,10 @@ class Command_IOS(Command):
     def create_ip_mgmnt(self):
         connections = Command.interface(self)
         lst_commands = ["conf t"]
-
-        for connection in connections:
-            num = Command.give_dev_num(connection[1])
-
-            if  num == None:
-                pass
-
-            elif num > self.num:
-                lst_commands.append(f"interface {connection[0]}")
-                tmp = [
-                    f"ip address 10.{self.num}",
-                    f".{num}.{self.num} ",
-                    f"255.255.255.0"
-                    ]
-                lst_commands.append("".join(tmp))
-                lst_commands.append("no shutdown")
+        print(connections[-1])
+        # for connection in connections:
+        #     # print(connection)
+        #     # print(self.ip_mgmt)
 
         lst_commands.append("end")
         return lst_commands

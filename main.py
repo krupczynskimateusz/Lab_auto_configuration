@@ -25,14 +25,18 @@ def main():
 
     # print(lst_devObj[1].network)
 
-    for dev in lst_devObj:
-        if dev.vendor != None:
-            dev_conf = commands.create_config_obj(dev) ## -> connection.py
-            print(dev_conf.gns_id)
-            print(dev_conf.create_config_interface())
-        else:
-            pass
-
+    # for dev in lst_devObj:
+    #     if dev.vendor != None:
+    #         dev_conf = commands.create_config_obj(dev) ## -> connection.py
+    #         # print(dev_conf.gns_id)
+    #         # print(dev_conf.create_config_interface())
+    #         print(dev_conf.create_ip_mgmnt())
+    #     else:
+    #         pass
+    dev_conf = commands.create_config_obj(lst_devObj[0]) ## -> connection.py
+    # print(dev_conf.gns_id)
+    # print(dev_conf.create_config_interface())
+    print(dev_conf.create_ip_mgmnt())
 
 
 if __name__ == "__main__":
