@@ -3,7 +3,7 @@
 from telnetlib import Telnet
 from netmiko import ConnectHandler
 from time import sleep
-from commands import create_basic_config
+from commands import create_config_obj
 
 
 
@@ -81,10 +81,10 @@ class Telnet_Conn():
 
 
 
-def start_basic_config(dev):
-    command_obj = create_basic_config(dev) ## -> commands.py
-    tc = Telnet_Conn(dev)
-    tc.test_send()
+def upload_basic_config(dev):
+    command_obj = create_config_obj(dev) ## -> commands.py
+    # tc = Telnet_Conn(dev)
+    # tc.test_send()
     # tc.send_lst(command_obj.basic_config())
     # tc.send_lst(command_obj.ssh_config())
 

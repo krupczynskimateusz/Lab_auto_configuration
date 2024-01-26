@@ -25,7 +25,7 @@ class Network():
 
 
     @classmethod
-    def get_ip_address(cls, vendor):
+    def get_ip_address(cls):
         ip = cls.ipv4_addresses_pool[0]
         cls.used_addresses.append(ip)
         cls.ipv4_addresses_pool.remove(ip)
@@ -36,7 +36,7 @@ class Network():
 class Device():
 
     dev_lst = []
-
+    dev_num = 0
 
     def __init__(
             self,
@@ -52,11 +52,18 @@ class Device():
         self.vendor = None
         self.ip_mgmt = None
         self.links = None
+        self.num = None
         Device.dev_lst.append(self)
 
 
     def get_links(self):
         return self.network.connection_create(self.gns_id)
+
+
+    @classmethod
+    def give_number(cls):
+        cls.dev_num += 1
+        return cls.dev_num 
 
 
     @staticmethod
@@ -84,7 +91,9 @@ class IOS(Device):
         self.vendor = "vIOS"
         self.username = "cisco"
         self.password = "cisco"
-        self.ip_mgmt = Network.get_ip_address(self)
+        self.ip_mgmt = Network.get_ip_address()
+        self.num = Device.give_number()
+        # print(self.gns_id, ":", self.num)
 
 
 
