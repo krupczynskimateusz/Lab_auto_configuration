@@ -30,6 +30,16 @@ class Network():
         cls.used_addresses.append(ip)
         cls.ipv4_addresses_pool.remove(ip)
         return ip
+    
+    
+    @staticmethod
+    def show_used_addresses():
+        return Device.used_addresses
+
+
+    @staticmethod
+    def show_free_addresses():
+        return Device.ipv4_addresses_pool
 
 
 
@@ -66,16 +76,6 @@ class Device():
         return cls.dev_num 
 
 
-    @staticmethod
-    def show_used_addresses():
-        return Device.used_addresses
-
-
-    @staticmethod
-    def show_free_addresses():
-        return Device.ipv4_addresses_pool
-
-
 
 class IOS(Device):
 
@@ -87,7 +87,12 @@ class IOS(Device):
             name: str,
             console_port: int
             ):
-        super().__init__(network, gns_id, name, console_port)
+        super().__init__(
+            network,
+            gns_id,
+            name,
+            console_port
+            )
         self.vendor = "vIOS"
         self.username = "cisco"
         self.password = "cisco"
