@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from my_system import Device
+from my_system import Device, Network
 
 
 
@@ -15,6 +15,10 @@ class Command():
         self.name = devobj.name
         self.network = devobj.network
         self.num = devobj.num
+
+
+    def get_mask(self):
+        pass
 
 
     def basic_config(self):
@@ -52,7 +56,6 @@ class Command():
                 interface_lst.append((link[tmp + 1][1], link[0][0]))
 
         return interface_lst
-
 
 
 
@@ -96,7 +99,7 @@ class Command_IOS(Command):
             "conf t",
             "crypto key generate rsa",
             ["2048", 8],
-            "ip ssh version 2"
+            "ip ssh version 2",
             "end"
         ]
         return lst_commands
@@ -121,30 +124,39 @@ class Command_IOS(Command):
         connections = Command.interface(self)
         lst_commands = ["conf t"]
 
-        for connection in connections:
+        for connection in connections[:-1]:
             num = Command.give_dev_num(connection[1])
 
             if  num == None:
-                pass
+                prefix = Network.get_multiacces_prefix()
+                lst_commands.append(f"interface {connection[0]}")
+                tmp = (
+                    f"{prefix}{self.num} "
+                    "255.255.255.0"
+                    )
+                lst_commands.append(tmp)
+                lst_commands.append("no shutdown")
+
 
             elif num > self.num:
                 lst_commands.append(f"interface {connection[0]}")
-                tmp = [
-                    f"ip address 10.{self.num}",
-                    f".{num}.{self.num} ",
-                    f"255.255.255.0"
-                    ]
-                lst_commands.append("".join(tmp))
+                tmp = (
+                    f"ip address 10.{self.num}"
+                    f".{num}.{self.num} "
+                    "255.255.255.0"
+                    )
+                lst_commands.append(tmp)
                 lst_commands.append("no shutdown")
 
             elif num < self.num:
                 lst_commands.append(f"interface {connection[0]}")
-                tmp = [
-                    f"ip address 10.{num}",
-                    f".{self.num}.{self.num} ",
-                    f"255.255.255.0"
-                    ]
-                lst_commands.append("".join(tmp))
+                tmp = (
+                    f"ip address 10.{num}"
+                    f".{self.num}.{self.num} "
+                    "255.255.255.0"
+                    )
+                    
+                lst_commands.append(tmp)
                 lst_commands.append("no shutdown")
 
         lst_commands.append("end")
@@ -162,5 +174,7 @@ def create_config_obj(devobj):
 
 def main():
     pass
+
+
 if __name__ == "__main__":
     main()

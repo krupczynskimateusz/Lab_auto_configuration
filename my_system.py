@@ -10,6 +10,8 @@ class Network():
     ipv4_addresses_pool = [f"192.168.10.{x}" for x in range(11, 40)]
     ipv4_address_mask = "25"
     used_addresses = []
+    multiacces_prefix = [f"10.0.{x}." for x in range(1, 10)]
+    used_multiacces_prefix = []
 
 
     def __init__(self, links):
@@ -23,6 +25,14 @@ class Network():
                 if node[0] == gns_id:
                     my_links.append(link)
         return my_links
+
+
+    @classmethod
+    def get_multiacces_prefix(cls):
+        prefix = cls.multiacces_prefix[0]
+        cls.used_multiacces_prefix.append(prefix)
+        cls.multiacces_prefix.remove(prefix)
+        return prefix
 
 
     @classmethod

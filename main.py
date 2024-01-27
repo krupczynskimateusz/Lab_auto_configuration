@@ -22,18 +22,27 @@ def main():
     ## Create device with information from lab.
     create_system(dct_nodes, dct_links)
 
+    print("\n")
+    print("#" * 20)
+    print("\n")
 
-    for dev in Device.dev_lst:
+    for dev in Device.dev_lst[:-4]:
+
         if dev.vendor != None:
             dev_conf = commands.create_config_obj(dev) ## -> connection.py
             print(dev_conf.basic_config())
             print(dev_conf.ssh_config())
-            print(dev_conf.create_config_interface())
             print(dev_conf.create_ip_mgmt())
-            print('\n' * 2)
+            print(dev_conf.create_config_interface())
+            print("\n")
+            print("#" * 20)
+            print("\n")
+
         else:
             pass
 
+    # dev_conf = commands.create_config_obj(Device.dev_lst[0]) ## -> connection.py
+    # print(dev_conf.create_config_interface())
 
 
 if __name__ == "__main__":
