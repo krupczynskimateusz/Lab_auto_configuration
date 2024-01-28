@@ -6,6 +6,7 @@ class Network():
 
 
     ipv4_addresses_pool = [f"192.168.10.{x}" for x in range(11, 40)]
+    ipv4_address_gatway = "192.168.10.1"
     ipv4_address_mask = "25"
     used_addresses = []
     multiacces_addresses = [f"10.0.{x}.0" for x in range(1, 10)]
@@ -59,8 +60,10 @@ class Network():
 
 class Device():
 
+
     dev_lst = []
     dev_num = 0
+
 
     def __init__(
             self,

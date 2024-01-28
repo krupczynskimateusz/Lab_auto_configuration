@@ -42,12 +42,9 @@ class Telnet_Conn():
 
     def first_send(self, timeout = 1):
         self.connect()
-
-        command = "\n"
-        for _ in range(5):
-            self.tc.write(command.encode())
-            
-            sleep(timeout)
+        
+        ## Don't work. Somehow you need to press enter on remote console.
+        self.tc.write(b"\n")
 
         self.close()
 
@@ -90,18 +87,14 @@ some_lst = [
 
 
 def upload_basic_config(dev):
-    if dev.vendor == None:
-        pass
-    if dev.vendor == "gns_switch":
-        pass
-    elif dev.vendor == "vIOS":
+    if dev.vendor == "vIOS":
         command_obj = create_config_obj(dev) ## -> commands.py
         tc = Telnet_Conn(dev)
-        # tc.first_send()
+        tc.first_send()
         tc.send_lst(command_obj.basic_config())
-        tc.send_lst(command_obj.ssh_config())
-        tc.send_lst(command_obj.create_config_interface())
-        tc.send_lst(some_lst)
+        # tc.send_lst(command_obj.ssh_config())
+        # tc.send_lst(command_obj.create_config_interface())
+        # tc.send_lst(some_lst)
 
     else:
         pass

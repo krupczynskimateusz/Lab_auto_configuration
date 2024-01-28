@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from my_system import Device
+from my_system import Device, Network
 
 
 
@@ -128,6 +128,11 @@ class Command_IOS(Command):
             "vrf forwarding mgmt",
             f"ip address {self.ip_mgmt} {self.get_mask()}",
             "no shutdown",
+            "exit",
+
+            "ip route vrf mgmt 0.0.0.0 0.0.0.0 "
+            f"{Network.ipv4_address_gatway}",
+            
             "end"
             ]
         return lst_commands

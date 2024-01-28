@@ -3,7 +3,7 @@
 from gns_data import get_json_files, show_in_file
 from other import nice_print
 from my_system import Device, create_system, Network
-from connection import upload_basic_config, Telnet_Conn
+from connection import upload_basic_config
 import time
 
 ## temporary
@@ -26,34 +26,29 @@ def main():
     print("#" * 20)
     print("\n")
 
-    # for dev in Device.dev_lst[3:6]:
+    for dev in Device.dev_lst[3:6]:
 
-    #     if dev.vendor != None:
-    #         dev_conf = commands.create_config_obj(dev) ## -> connection.py
-    #         print(dev_conf.basic_config())
-    #         print(dev_conf.ssh_config())
-    #         print(dev_conf.create_ip_mgmt())
-    #         print(dev_conf.create_config_interface())
-    #         print("\n")
-    #         print("#" * 20)
-    #         print("\n")
+        if dev.vendor != None:
+            dev_conf = commands.create_config_obj(dev) ## -> connection.py
+            print(dev_conf.basic_config())
+            print(dev_conf.ssh_config())
+            print(dev_conf.create_ip_mgmt())
+            print(dev_conf.create_config_interface())
+            print("\n")
+            print("#" * 20)
+            print("\n")
 
-    #     else:
-    #         pass
-
-
-    for dev in Device.dev_lst[3:4]:
-        print(dev.name)
-        upload_basic_config(dev)
-        print("\n")
-        print("#" * 20)
-        print("\n")
+        else:
+            pass
 
 
+    # for dev in Device.dev_lst:
+    #     print(dev.name)
+    #     upload_basic_config(dev)
+    #     print("\n")
+    #     print("#" * 20)
+    #     print("\n")
 
-
-    # dev_conf = commands.create_config_obj(Device.dev_lst[0]) ## -> connection.py
-    # print(dev_conf.create_config_interface())
 
 
 if __name__ == "__main__":
