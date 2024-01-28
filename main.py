@@ -14,10 +14,10 @@ import commands
 def main():
     
     ## Get info about links and nodes in lab.
-    path = "gns3_file/automation_test.gns3"
+    path = "gns3_file/automation_test2.gns3"
     dct_nodes, dct_links = get_json_files(path)
-    # show_in_file(dct_nodes, "file/dct_nodes.json")
-    # show_in_file(dct_links, "file/dct_links.json")
+    # show_in_file(dct_nodes, "file/dct_nodes2.json")
+    # show_in_file(dct_links, "file/dct_links2.json")
 
     ## Create device with information from lab.
     create_system(dct_nodes, dct_links)
@@ -26,20 +26,31 @@ def main():
     print("#" * 20)
     print("\n")
 
-    for dev in Device.dev_lst[3:6]:
+    # for dev in Device.dev_lst[3:6]:
 
-        if dev.vendor != None:
-            dev_conf = commands.create_config_obj(dev) ## -> connection.py
-            print(dev_conf.basic_config())
-            print(dev_conf.ssh_config())
-            print(dev_conf.create_ip_mgmt())
-            print(dev_conf.create_config_interface())
-            print("\n")
-            print("#" * 20)
-            print("\n")
+    #     if dev.vendor != None:
+    #         dev_conf = commands.create_config_obj(dev) ## -> connection.py
+    #         print(dev_conf.basic_config())
+    #         print(dev_conf.ssh_config())
+    #         print(dev_conf.create_ip_mgmt())
+    #         print(dev_conf.create_config_interface())
+    #         print("\n")
+    #         print("#" * 20)
+    #         print("\n")
 
-        else:
-            pass
+    #     else:
+    #         pass
+
+
+    for dev in Device.dev_lst[3:4]:
+        print(dev.name)
+        upload_basic_config(dev)
+        print("\n")
+        print("#" * 20)
+        print("\n")
+
+
+
 
     # dev_conf = commands.create_config_obj(Device.dev_lst[0]) ## -> connection.py
     # print(dev_conf.create_config_interface())

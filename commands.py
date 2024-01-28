@@ -179,7 +179,11 @@ class Command_IOS(Command):
 
 
 def create_config_obj(devobj):
-    if devobj.vendor == "vIOS":
+    if devobj.vendor == None:
+        pass
+    if devobj.vendor == "gns_switch":
+        pass
+    elif devobj.vendor == "vIOS":
         dev = Command_IOS(devobj)
         return dev
     else:
