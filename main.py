@@ -16,8 +16,8 @@ def main():
     ## Get info about links and nodes in lab.
     path = "gns3_file/automation_test.gns3"
     dct_nodes, dct_links = get_json_files(path)
-    show_in_file(dct_nodes, "file/dct_nodes.json")
-    show_in_file(dct_links, "file/dct_links.json")
+    # show_in_file(dct_nodes, "file/dct_nodes.json")
+    # show_in_file(dct_links, "file/dct_links.json")
 
     ## Create device with information from lab.
     create_system(dct_nodes, dct_links)
@@ -26,7 +26,7 @@ def main():
     print("#" * 20)
     print("\n")
 
-    for dev in Device.dev_lst[:-4]:
+    for dev in Device.dev_lst[3:6]:
 
         if dev.vendor != None:
             dev_conf = commands.create_config_obj(dev) ## -> connection.py

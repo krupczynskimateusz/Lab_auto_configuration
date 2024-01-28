@@ -44,8 +44,12 @@ def get_nodes_info(nodes):
         node_name = node["name"]
 
         if "hda_disk_image" in node["properties"].keys():
-            if "vios-adventerprisek9-m." in node["properties"]["hda_disk_image"]:
+            if "vios-adventerprisek9" in node["properties"]["hda_disk_image"]:
                 vendor = "vIOS"
+
+        elif "ethernet_switch" in node["node_type"]:
+            vendor = "gns_switch"
+            
         else:
             vendor = None
 

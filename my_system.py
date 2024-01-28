@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import time
-
 
 
 class Network():
@@ -10,8 +8,8 @@ class Network():
     ipv4_addresses_pool = [f"192.168.10.{x}" for x in range(11, 40)]
     ipv4_address_mask = "25"
     used_addresses = []
-    multiacces_prefix = [f"10.0.{x}." for x in range(1, 10)]
-    used_multiacces_prefix = []
+    multiacces_addresses = [f"10.0.{x}.0" for x in range(1, 10)]
+    used_multiacces_addresses = []
 
 
     def __init__(self, links):
@@ -28,19 +26,20 @@ class Network():
 
 
     @classmethod
-    def get_multiacces_prefix(cls):
-        prefix = cls.multiacces_prefix[0]
-        cls.used_multiacces_prefix.append(prefix)
-        cls.multiacces_prefix.remove(prefix)
-        return prefix
-
-
-    @classmethod
     def get_ip_address(cls):
         ip = cls.ipv4_addresses_pool[0]
         cls.used_addresses.append(ip)
         cls.ipv4_addresses_pool.remove(ip)
         return ip
+
+
+    @classmethod
+    def get_multiacces_address(cls):
+        ip = cls.multiacces_addresses[0]
+        cls.used_multiacces_addresses.append(ip)
+        cls.multiacces_addresses.remove(ip)
+        return ip
+
 
     @classmethod
     def get_ip_address_mask(cls):
@@ -93,6 +92,27 @@ class Device():
 
 
 
+class GNS_Switch(Device):
+
+
+    def __init__(
+            self,
+            network: object,
+            gns_id: str,
+            name: str,
+            console_port: int
+            ):
+        super().__init__(
+            network,
+            gns_id,
+            name,
+            console_port
+            )
+        self.vendor = "gns_switch"
+        self.multiacces_prefix = Network.get_multiacces_address()
+
+
+
 class IOS(Device):
 
 
@@ -115,7 +135,6 @@ class IOS(Device):
         self.ip_mgmt = Network.get_ip_address()
         self.ip_mgmt_mask = Network.get_ip_address_mask()
         self.num = Device.give_number()
-        # print(self.gns_id, ":", self.num)
 
 
 
@@ -132,6 +151,9 @@ def create_system(nodes, links):
 
         if "vIOS" == dev[3]:
             node = IOS(network, gns_id, name, console_port)
+        
+        elif "gns_switch" == dev[3]:
+            node = GNS_Switch(network, gns_id, name, console_port)
 
         else:
             node = Device(network, gns_id, name, console_port)

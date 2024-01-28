@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from my_system import Device, Network
+from my_system import Device
 
 
 
@@ -30,19 +30,6 @@ class Command():
 
 
     @staticmethod
-    def give_dev_num(gns_id):
-        # print(gns_id)
-        dev_lst = Device.dev_lst
-        # print(dev_lst[0].num)
-        for dev in dev_lst:
-            # print(dev.num)
-            if dev.gns_id == gns_id:
-                return dev.num
-            else:
-                pass
-
-
-    @staticmethod
     def interface(dev):
         interface_lst = []
         tmp = 0
@@ -56,6 +43,32 @@ class Command():
                 interface_lst.append((link[tmp + 1][1], link[0][0]))
 
         return interface_lst
+
+
+    @staticmethod
+    def give_dev_num(gns_id):
+        dev_lst = Device.dev_lst
+
+        for dev in dev_lst:
+
+            if dev.gns_id == gns_id:
+                return dev.num
+            
+            else:
+                pass
+
+
+    @staticmethod
+    def get_multiacces_prefix(gns_id):
+        dev_lst = Device.dev_lst
+
+        for dev in dev_lst:
+
+            if dev.gns_id == gns_id:
+                return dev.multiacces_prefix[:-2]
+            
+            else:
+                pass
 
 
 
@@ -128,11 +141,12 @@ class Command_IOS(Command):
             num = Command.give_dev_num(connection[1])
 
             if  num == None:
-                prefix = Network.get_multiacces_prefix()
                 lst_commands.append(f"interface {connection[0]}")
                 tmp = (
-                    f"{prefix}{self.num} "
-                    "255.255.255.0"
+                    f"ip address "
+                    f"{Command.get_multiacces_prefix(connection[1])}"
+                    f".{self.num} "
+                    f"255.255.255.0"
                     )
                 lst_commands.append(tmp)
                 lst_commands.append("no shutdown")
