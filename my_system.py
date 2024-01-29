@@ -3,12 +3,18 @@
 
 
 class Network():
+    """
+    A network object based on which 
+    the necessary information about 
+    prefixes and free addresses is retrieved.
+    """
 
 
     ipv4_addresses_pool = [f"192.168.10.{x}" for x in range(11, 40)]
     ipv4_address_gatway = "192.168.10.1"
     ipv4_address_mask = "25"
     used_addresses = []
+
     multiacces_addresses = [f"10.0.{x}.0" for x in range(1, 10)]
     used_multiacces_addresses = []
 
@@ -18,6 +24,13 @@ class Network():
 
 
     def my_links(self, gns_id):
+        """
+        The function returns a list of connections in which the device participates.
+
+        :parm: Device GNS_ID
+        :return: List of links. 
+        """
+        
         my_links = []
         for link in self.links:
             for node in link:
@@ -28,6 +41,12 @@ class Network():
 
     @classmethod
     def get_ip_address(cls):
+        """
+        The function give free ip address for managment purpose.
+
+        :return: IPv4 address string.
+        """
+        
         ip = cls.ipv4_addresses_pool[0]
         cls.used_addresses.append(ip)
         cls.ipv4_addresses_pool.remove(ip)
@@ -36,6 +55,12 @@ class Network():
 
     @classmethod
     def get_multiacces_address(cls):
+        """
+        The function give prefix for switch for multiacces purpose. 
+
+        :return: IPv4 address.
+        """
+        
         ip = cls.multiacces_addresses[0]
         cls.used_multiacces_addresses.append(ip)
         cls.multiacces_addresses.remove(ip)
@@ -70,7 +95,8 @@ class Device():
             network: object,
             gns_id: str,
             name: str,
-            console_port: int
+            console_port: int,
+            domain: str = "lab.home"
             ):
         self.network = network
         self.gns_id = gns_id
@@ -81,6 +107,7 @@ class Device():
         self.ip_mgmt_mask = None
         self.links = None
         self.num = None
+        self.ip_domain = domain
         Device.dev_lst.append(self)
 
 

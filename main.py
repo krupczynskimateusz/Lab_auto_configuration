@@ -26,28 +26,28 @@ def main():
     print("#" * 20)
     print("\n")
 
-    for dev in Device.dev_lst[3:6]:
+    # for dev in Device.dev_lst[3:6]:
 
-        if dev.vendor != None:
-            dev_conf = commands.create_config_obj(dev) ## -> connection.py
-            print(dev_conf.basic_config())
-            print(dev_conf.ssh_config())
-            print(dev_conf.create_ip_mgmt())
-            print(dev_conf.create_config_interface())
-            print("\n")
-            print("#" * 20)
-            print("\n")
+    #     if dev.vendor != None:
+    #         dev_conf = commands.create_config_obj(dev) ## -> connection.py
+    #         print(dev_conf.basic_config())
+    #         print(dev_conf.ssh_config())
+    #         print(dev_conf.create_ip_mgmt())
+    #         print(dev_conf.create_config_interface())
+    #         print("\n")
+    #         print("#" * 20)
+    #         print("\n")
 
-        else:
-            pass
+    #     else:
+    #         pass
 
 
-    # for dev in Device.dev_lst:
-    #     print(dev.name)
-    #     upload_basic_config(dev)
-    #     print("\n")
-    #     print("#" * 20)
-    #     print("\n")
+    for dev in Device.dev_lst:
+        print(dev.name)
+        upload_basic_config(dev)
+        print("\n")
+        print("#" * 20)
+        print("\n")
 
 
 

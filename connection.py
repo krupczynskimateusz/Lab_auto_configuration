@@ -78,32 +78,21 @@ class Telnet_Conn():
     def show_all(self):
         return self.tc.read_all()
 
-some_lst = [
-    "conf t",
-    "router ospf 1",
-    "net 0.0.0.0 0.0.0.0 area 1",
-    "end"
-]
 
 
 def upload_basic_config(dev):
     if dev.vendor == "vIOS":
         command_obj = create_config_obj(dev) ## -> commands.py
         tc = Telnet_Conn(dev)
-        tc.first_send()
-        tc.send_lst(command_obj.basic_config())
+        # tc.first_send()
+        # tc.send_lst(command_obj.basic_config())
         # tc.send_lst(command_obj.ssh_config())
-        # tc.send_lst(command_obj.create_config_interface())
-        # tc.send_lst(some_lst)
+        tc.send_lst(command_obj.create_config_interfaces())
 
     else:
         pass
 
 
 
-
-def main():
-    pass
-
 if __name__ == "__main__":
-    main()
+    pass
