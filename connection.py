@@ -4,17 +4,17 @@ from telnetlib import Telnet
 from netmiko import ConnectHandler
 from time import sleep
 from commands import create_config_obj
+import os
 
+
+gns_server_ip = "192.168.10.126"
 
 
 class Telnet_Conn():
 
 
-    gns_server_ip = "192.168.10.126"
-
-
     def __init__(self, devobj):
-        self.host = Telnet_Conn.gns_server_ip
+        self.host = gns_server_ip
         self.port = devobj.console_port
         self.username = devobj.username
         self.password = devobj.password
@@ -80,14 +80,52 @@ class Telnet_Conn():
 
 
 
+class GNS3_Conn():
+
+
+    def __init__(self):
+        self.host = gns_server_ip
+        self.port = "22"
+        self.username = "mateusz"
+        self.password = "admin123"
+        self.secret = "admin123"
+
+
+    def _connect(self):
+        self.ssh = ConnectHandler(
+            host = self.host,
+            port = self.port,
+            username = self.username,
+            password = self.password,
+            secret = self.secret,
+            device_type = "linux",
+            system_host_keys = True,
+            allow_agent = True,
+            verbose = True 
+        )
+
+
+    def _close(self):
+        self.ssh.disconnect()
+
+
+    def send_command(self, command: str):
+        self._connect()
+
+        if "sudo" in command:
+            self.ssh.enable()
+        output = self.ssh.send_command(command)
+
+        self._close()
+
+        return output
+
+
+
 def upload_basic_config(dev):
     if dev.vendor == "vIOS":
         command_obj = create_config_obj(dev) ## -> commands.py
         tc = Telnet_Conn(dev)
-        # tc.first_send()
-        # tc.send_lst(command_obj.basic_config())
-        # tc.send_lst(command_obj.ssh_config())
-        tc.send_lst(command_obj.create_config_interfaces())
 
     else:
         pass
@@ -95,4 +133,6 @@ def upload_basic_config(dev):
 
 
 if __name__ == "__main__":
-    pass
+    gns3 = GNS3_Conn()
+    print(gns3.send_command("sudo ls -l /opt/gns3/projects"))
+    
