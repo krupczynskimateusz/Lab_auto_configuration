@@ -6,9 +6,6 @@ from my_system import Device, create_system, Network
 from connection import upload_basic_config
 import time
 
-## temporary
-import commands
-
 
 
 def main():
