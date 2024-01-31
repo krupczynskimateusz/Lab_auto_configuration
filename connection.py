@@ -87,7 +87,7 @@ class GNS3_Conn():
     def __init__(self):
         self.host = gns_server_ip
         self.port = "22"
-        print("Gns3 connection parametrs:")
+        print("GNS3 connection parametr:")
         # self.username = input("Username: ")
         # self.password = getpass("Password: ")
         # self.secret = getpass("Secret: ")
@@ -106,7 +106,7 @@ class GNS3_Conn():
             device_type = "linux",
             system_host_keys = True,
             allow_agent = True,
-            verbose = True 
+            verbose = False,
         )
 
 
@@ -119,7 +119,7 @@ class GNS3_Conn():
 
         if "sudo" in command:
             self.ssh.enable()
-        output = self.ssh.send_command(command)
+        output = self.ssh.send_command(command, )
 
         self._close()
 
@@ -165,6 +165,7 @@ class GNS3_Conn():
             self._connect()
             if "sudo" in cmd:
                 self.ssh.enable()
+
             folders = []
             for folder in folders_lst:
 
@@ -184,19 +185,17 @@ class GNS3_Conn():
         ## Get folder names for gns3/project
         output = self.send(cmd_path)
 
-        ## Extract folder names
         folder_names = get_folders_name(output)
 
-        ## Get priojects name with parent folder. 
         project_lst = extract_project_names(cmd_path, folder_names)
 
         return project_lst
 
 
-def gns3_projects(path_to_gns3_folder):
+def get_gns3_projects(path_to_gns3_folder: str = "/opt/gns3/projects/"):
     gns3 = GNS3_Conn()
-
-    return gns3.get_labs_names(path_to_gns3_folder)
+    projects_lst = gns3.get_labs_names(path_to_gns3_folder)
+    return projects_lst
 
 
 def upload_basic_config(dev):
