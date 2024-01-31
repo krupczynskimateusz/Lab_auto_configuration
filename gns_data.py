@@ -2,6 +2,7 @@
 
 import json
 
+
 ## Getting lab config from .gns3 file.
 def get_json_files(path):
     with open(path) as f:
@@ -17,12 +18,13 @@ def get_json_files(path):
     nodes_fin = get_nodes_info(dct_nodes)
 
     return nodes_fin, links_fin
-    
+
+
 ## Get needed link info from links dct.
 def get_links_info(links):
     links_info = []     ## tmp connection lst.
-    for conn_id, link in enumerate(links, start = 1):
-        connection = [conn_id]
+    for link in links:
+        connection = []
         for node in link["nodes"]:
             id = node["node_id"]
             int_name = node["label"]["text"]
@@ -31,27 +33,39 @@ def get_links_info(links):
         links_info.append(connection_tp)
     return links_info
 
+
 ## Get needed node info from nodes dct.
 def get_nodes_info(nodes):
     nodes_info = []
+
     for node in nodes:
-        if "Switch" in node["name"]:
-            pass
+        gns_id = node["node_id"]
+        console_port = node["console"]
+        node_name = node["name"]
+
+        if "hda_disk_image" in node["properties"].keys():
+            if "vios-adventerprisek9" in node["properties"]["hda_disk_image"]:
+                vendor = "vIOS"
+
+        elif "ethernet_switch" in node["node_type"]:
+            vendor = "gns_switch"
+            
         else:
-            gns_id = node["node_id"]
-            console_port = node["console"]
-            node_name = node["name"]
-            tmp_tuple = (gns_id, console_port, node_name)
-            ID = id(tmp_tuple)
-            nodes_info.append((ID, tmp_tuple))
+            vendor = None
+
+        tmp_tuple = (gns_id, console_port, node_name, vendor)
+        nodes_info.append(tmp_tuple)
+
     return nodes_info
 
+
 ## Only for debug purpose.
-def show_in_file(dct: dict, file: str):
-    with open(file, "w") as f:
+def show_in_file(dct: dict, path: str):
+    from pathlib import Path
+    with open(path, "w") as f:
         f.write(json.dumps(dct, indent = 4))
-    with open("all_info.json", "a") as f:
-        f.write(json.dumps(dct, indent = 4))
+    my_file = Path(path)
+
 
 def main():
     pass
