@@ -97,21 +97,32 @@ class GNS3_Conn():
 
 
     def _connect(self):
-        self.ssh = ConnectHandler(
-            host = self.host,
-            port = self.port,
-            username = self.username,
-            password = self.password,
-            secret = self.secret,
-            device_type = "linux",
-            system_host_keys = True,
-            allow_agent = True,
-            verbose = False,
-        )
+        from netmiko import NetMikoTimeoutException
+        try:
+            print("Debug1")
+            self.ssh = ConnectHandler(
+                host = self.host,
+                port = self.port,
+                username = self.username,
+                password = self.password,
+                secret = self.secret,
+                device_type = "linux",
+                system_host_keys = True,
+                allow_agent = True,
+                verbose = True,
+            )
+        except NetMikoTimeoutException:
+            print("Debug4")
 
 
     def _close(self):
-        self.ssh.disconnect()
+        if self.ssh:
+            if self.ssh.is_alive():
+                self.ssh.disconnect()
+            else:
+                pass
+        else:
+            pass
 
 
     def send(self, command: str):
@@ -184,9 +195,7 @@ class GNS3_Conn():
 
         ## Get folder names for gns3/project
         output = self.send(cmd_path)
-
         folder_names = get_folders_name(output)
-
         project_lst = extract_project_names(cmd_path, folder_names)
 
         return project_lst
@@ -195,6 +204,7 @@ class GNS3_Conn():
 def get_gns3_projects(path_to_gns3_folder: str = "/opt/gns3/projects/"):
     gns3 = GNS3_Conn()
     projects_lst = gns3.get_labs_names(path_to_gns3_folder)
+
     return projects_lst
 
 
