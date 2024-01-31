@@ -55,6 +55,8 @@ def execute_script(selected_project, project_lst):
     if project_lst == None:
         project_lst = get_gns3_projects()
 
+    
+
 
 def main():
 
