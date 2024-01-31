@@ -3,8 +3,7 @@
 from gns_data import get_json_files, show_in_file
 from other import nice_print
 from my_system import Device, create_system, Network
-from connection import upload_basic_config
-import time
+from connection import gns3_projects, upload_basic_config
 
 
 
