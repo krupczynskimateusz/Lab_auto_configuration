@@ -17,15 +17,24 @@ class Telnet_Conn():
     def __init__(self, devobj):
         self.host = gns_server_ip
         self.port = devobj.console_port
+        self.name = devobj.name
         self.username = devobj.username
         self.password = devobj.password
 
 
     def connect(self):
-        self.tc = Telnet(
-            host = self.host,
-            port = str(self.port)
-            )
+        try:
+            self.tc = Telnet(
+                host = self.host,
+                port = str(self.port)
+                )
+            sleep(1)
+        except ConnectionRefusedError:
+            print("\n")
+            print(f"Can't connect to {self.name}...")
+            print("Check if that device is up...")
+            print("Exiting...\n")
+            exit()
 
 
     def authenticate(self, output):
@@ -91,13 +100,15 @@ class GNS3_Conn():
         # self.username = input("Username: ")
         # self.password = getpass("Password: ")
         # self.secret = getpass("Secret: ")
-        self.username = "mateuuusz"
+        self.username = "mateusz"
         self.password = "admin123"
         self.secret = "admin123"
 
 
     def _connect(self):
-        from netmiko import NetMikoTimeoutException, NetMikoAuthenticationException
+        """Connect to gns3 server"""
+        from netmiko import NetMikoTimeoutException
+        from netmiko import NetMikoAuthenticationException
         try:
             self.ssh = ConnectHandler(
                 host = self.host,
@@ -131,6 +142,7 @@ class GNS3_Conn():
 
 
     def _close(self):
+        """Close connection if exist."""
         try:
             self.ssh.disconnect()
         except:
@@ -138,11 +150,12 @@ class GNS3_Conn():
 
 
     def send(self, command: str):
+        """Simple sending of command """
         self._connect()
 
         if "sudo" in command:
             self.ssh.enable()
-        output = self.ssh.send_command(command, )
+        output = self.ssh.send_command(command)
 
         self._close()
 
@@ -224,10 +237,11 @@ def upload_basic_config(dev):
     if dev.vendor == "vIOS":
         command_obj = create_config_obj(dev) ## -> commands.py
         tc = Telnet_Conn(dev)
+        tc.send_lst(command_obj)
 
     else:
         pass
 
 
 if __name__ == "__main__":
-    get_gns3_projects()
+    pass
