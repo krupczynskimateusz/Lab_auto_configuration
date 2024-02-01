@@ -2,7 +2,7 @@
 
 from gns_data import get_json_files, show_in_file
 from my_system import Device, create_system, Network
-from connection import GNS3_Conn, get_gns3_projects, upload_basic_config, download_project
+from connection import GNS3_Conn, get_gns3_projects, upload_basic_config, prepare_project
 from time import sleep
 
 
@@ -49,25 +49,47 @@ def show_projects(GNSServer):
 
 def set_project():
     print("\n")
+    print("#" * 26, "\n")
     selected_project = input("# Enter project name or number: ")
+    try:
+        selected_project = ("number", int(selected_project))
+        return selected_project
+    except:
+        selected_project = ("string", selected_project)
+        return selected_project
 
-    return selected_project
 
-
-def execute_script(GNSServer, selected_project, project_lst):
+def execute_script(
+        GNSServer: object,
+        selected_project: str,
+        project_lst: list,
+        path: str = "/tmp/gns3_project.gns3"
+        ):
     if selected_project == None:
         return print("You need to select project...")
     
     if project_lst == None:
         project_lst = get_gns3_projects(GNSServer)
-    
-    download_project()
+
+    if selected_project[0] == "string":
+        for project in project_lst:
+            if selected_project[1] in project[0]:
+                project_to_download = project
+
+    elif selected_project[0] == "number":
+        project_to_download = project_lst[selected_project[1] - 1]
+
+    else:
+        print("Error with selected_project ocur....")
+        exit()
+
+    prepare_project(GNSServer, project_to_download, path)
 
 
 
 def main():
 
-    selected_project = None
+    selected_project = ("number", 1)
     project_lst = None
     GNSServer = init()
 

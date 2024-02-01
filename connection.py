@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from telnetlib import Telnet
-from netmiko import ConnectHandler
+from netmiko import ConnectHandler, file_transfer
 from time import sleep
 from commands import create_config_obj
 import os
@@ -96,6 +96,7 @@ class GNS3_Conn():
     def __init__(self):
         self.host = gns_server_ip
         self.port = "22"
+        self.gns_files_path = "/opt/gns3/projects/"
         print("GNS3 connection parametr:")
         # self.username = input("Username: ")
         # self.password = getpass("Password: ")
@@ -162,7 +163,7 @@ class GNS3_Conn():
         return output
 
 
-    def get_labs_names(self, gns_path: str):
+    def get_labs_names(self):
         """
         This function returns all project names from gns3 server.
 
@@ -216,7 +217,7 @@ class GNS3_Conn():
 
             return folders
 
-        cmd_path = "sudo ls -l " + gns_path
+        cmd_path = "sudo ls -l " + self.gns_files_path
 
         ## Get folder names for gns3/project
         output = self.send(cmd_path)
@@ -226,15 +227,43 @@ class GNS3_Conn():
         return project_lst
 
 
-def get_gns3_projects(GNSServer, path_to_gns3_folder: str = "/opt/gns3/projects/"):
-    projects_lst = GNSServer.get_labs_names(path_to_gns3_folder)
+    def download_project(self, project_to_download, path):
+        cmd = (
+            "sudo cp " 
+            f"{self.gns_files_path}{project_to_download[1]}"
+            f"/{project_to_download[0]} "
+            f"/tmp/{project_to_download[0]}"
+            " && "
+            f"sudo chown {self.username}:{self.username} "
+            f"/tmp/{project_to_download[0]}"
+            )
+        print(cmd)
+        self.send(cmd)
+
+        self._connect()
+        print(path)
+        file_transfer(
+            ssh_conn = self.ssh,
+            source_file = f"/tmp/{project_to_download[0]}",
+            dest_file = path,
+            direction = "get",
+            disable_md5 = True
+            )
+        self._close()
+
+
+##################################
+
+def get_gns3_projects(GNSServer):
+    projects_lst = GNSServer.get_labs_names()
 
     return projects_lst
 
 
-def download_project():
-    import scp
-    
+def prepare_project(GNSServer, project_to_download, path):
+    print(project_to_download)
+    GNSServer.download_project(project_to_download, path)
+
     pass
 
 
