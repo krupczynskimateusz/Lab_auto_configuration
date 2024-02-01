@@ -20,7 +20,6 @@ def prompt_menu():
     ]
 
     print("\n")
-    print("#" * 26)
     print("#" * 10, "MENU", "#" * 10, "\n")
 
     for i, opt in enumerate(options_lst, start = 1):
@@ -83,7 +82,14 @@ def execute_script(
         print("Error with selected_project ocur....")
         exit()
 
-    prepare_project(GNSServer, project_to_download, path)
+    project_path = prepare_project(GNSServer, project_to_download, path)
+
+    if not project_path:
+        return False
+    else:
+        dct_nodes, dct_links = get_json_files(path)
+        show_in_file(dct_nodes, "file/dct_nodes2.json")
+        show_in_file(dct_links, "file/dct_links2.json")
 
 
 
@@ -105,6 +111,7 @@ def main():
 
         elif chose == "3":
             execute_script(GNSServer, selected_project, project_lst)
+            sleep(1)
 
         elif chose == "4":
             print("Exiting...")
@@ -114,7 +121,6 @@ def main():
             print("You need to pick valid option...")
             sleep(1)
 
-        print(selected_project)
 
 
 ############################################################

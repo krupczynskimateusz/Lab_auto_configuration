@@ -2,13 +2,16 @@
 
 from telnetlib import Telnet
 from netmiko import ConnectHandler, file_transfer
+from paramiko import SSHClient
+from scp import SCPClient
 from time import sleep
 from commands import create_config_obj
-import os
 from getpass import getpass
+from hashlib import sha1 as hash_sha1
+from os import remove as os_remove
 
 
-gns_server_ip = "192.168.10.126"
+gns_server_ip = "gns3.home"
 
 
 class Telnet_Conn():
@@ -228,7 +231,22 @@ class GNS3_Conn():
 
 
     def download_project(self, project_to_download, path):
-        cmd = (
+        """
+        The function is used to download the lab project from
+        the GNS3 server. The first part copies the project to
+        the tmp/ folder on the server and changes the project
+        owner to the user with which we log in to gns3. Then
+        the hash is calculated using the sha1 algorithm. After
+        moving the project, it is downloaded by scp to the
+        path selected by the user. The hash is checked. If it
+        does not match, the file is deleted.
+
+        :param: A project that needs to be downloaded.
+        :param: Path where a project will be downloaded.
+        """
+        print(f"Copying project to local device to: {path}")
+
+        copy_command = (
             "sudo cp " 
             f"{self.gns_files_path}{project_to_download[1]}"
             f"/{project_to_download[0]} "
@@ -236,20 +254,47 @@ class GNS3_Conn():
             " && "
             f"sudo chown {self.username}:{self.username} "
             f"/tmp/{project_to_download[0]}"
-            )
-        print(cmd)
-        self.send(cmd)
+        )
+        self.send(copy_command)
 
-        self._connect()
-        print(path)
-        file_transfer(
-            ssh_conn = self.ssh,
-            source_file = f"/tmp/{project_to_download[0]}",
-            dest_file = path,
-            direction = "get",
-            disable_md5 = True
+        check_sha1_command = f"sha1sum /tmp/{project_to_download[0]}"
+        remote_sha1 = self.send(check_sha1_command)
+        remote_sha1 = remote_sha1.split()
+        remote_sha1 = remote_sha1[0]
+
+        ## SCP implementation. Netmiko don't work corectly.
+        ssh = SSHClient()
+        ssh.load_system_host_keys()
+        ssh.connect(
+            hostname = self.host,
+            username = self.username,
+            password = self.password
+        )
+        ssh.exec_command
+        scp = SCPClient(ssh.get_transport())
+        scp.get(
+            remote_path = f"/tmp/{project_to_download[0]}",
+            local_path = path
             )
-        self._close()
+        if scp.transport.is_active():
+            print("Closing SCP connection...")
+            scp.close()
+        if ssh.get_transport().is_active():
+            print("Closing SSH connection...")
+            ssh.close()
+        
+        with open(path, "br") as f:
+            txt = f.read()
+        local_sha1 = hash_sha1(txt)
+        local_sha1 = local_sha1.hexdigest()
+        
+        if local_sha1 != remote_sha1:
+            print("Files not equal. Deleting...")
+            os_remove(path)
+            return False
+        
+        return path
+
 
 
 ##################################
