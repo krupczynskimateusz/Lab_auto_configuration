@@ -226,11 +226,16 @@ class GNS3_Conn():
         return project_lst
 
 
-def get_gns3_projects(path_to_gns3_folder: str = "/opt/gns3/projects/"):
-    gns3 = GNS3_Conn()
-    projects_lst = gns3.get_labs_names(path_to_gns3_folder)
+def get_gns3_projects(GNSServer, path_to_gns3_folder: str = "/opt/gns3/projects/"):
+    projects_lst = GNSServer.get_labs_names(path_to_gns3_folder)
 
     return projects_lst
+
+
+def download_project():
+    import scp
+    
+    pass
 
 
 def upload_basic_config(dev):

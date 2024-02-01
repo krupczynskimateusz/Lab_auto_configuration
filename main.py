@@ -2,8 +2,13 @@
 
 from gns_data import get_json_files, show_in_file
 from my_system import Device, create_system, Network
-from connection import get_gns3_projects, upload_basic_config
+from connection import GNS3_Conn, get_gns3_projects, upload_basic_config, download_project
 from time import sleep
+
+
+def init():
+    GNSServer = GNS3_Conn()
+    return GNSServer
 
 
 def prompt_menu():
@@ -26,8 +31,8 @@ def prompt_menu():
     return chose
 
 
-def show_projects():
-    project_lst = get_gns3_projects()
+def show_projects(GNSServer):
+    project_lst = get_gns3_projects(GNSServer)
 
     print("\n")
     print("#" * 4, "Project list:")
@@ -49,11 +54,14 @@ def set_project():
     return selected_project
 
 
-def execute_script(selected_project, project_lst):
+def execute_script(GNSServer, selected_project, project_lst):
     if selected_project == None:
         return print("You need to select project...")
+    
     if project_lst == None:
-        project_lst = get_gns3_projects()
+        project_lst = get_gns3_projects(GNSServer)
+    
+    download_project()
 
 
 
@@ -61,19 +69,20 @@ def main():
 
     selected_project = None
     project_lst = None
+    GNSServer = init()
 
 
     while True:
         chose = prompt_menu()
 
         if chose == "1":
-            show_projects()
+            show_projects(GNSServer)
 
         elif chose == "2":
             selected_project = set_project()
 
         elif chose == "3":
-            execute_script(selected_project, project_lst)
+            execute_script(GNSServer, selected_project, project_lst)
 
         elif chose == "4":
             print("Exiting...")
