@@ -83,22 +83,28 @@ def execute_script(
         exit()
 
     project_path = prepare_project(GNSServer, project_to_download, path)
-
+    print(project_path)
     if not project_path:
         return False
     else:
-        dct_nodes, dct_links = get_json_files(path)
-        show_in_file(dct_nodes, "file/dct_nodes2.json")
-        show_in_file(dct_links, "file/dct_links2.json")
+        dct_nodes, dct_links = get_json_files(project_path)
+        create_system(dct_nodes, dct_links)
+        show_in_file(dct_nodes, "file/dct_nodes_new.json")
+        show_in_file(dct_links, "file/dct_links_new.json")
 
+        for dev in Device.dev_lst:
+            print(dev.name)
+            upload_basic_config(dev)
+            print("\n")
+            print("#" * 20)
+            print("\n")
 
 
 def main():
 
-    selected_project = ("number", 1)
+    selected_project = None
     project_lst = None
     GNSServer = init()
-
 
     while True:
         chose = prompt_menu()

@@ -306,10 +306,9 @@ def get_gns3_projects(GNSServer):
 
 
 def prepare_project(GNSServer, project_to_download, path):
-    print(project_to_download)
-    GNSServer.download_project(project_to_download, path)
+    path = GNSServer.download_project(project_to_download, path)
 
-    pass
+    return path
 
 
 def upload_basic_config(dev):
