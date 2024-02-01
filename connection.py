@@ -91,15 +91,14 @@ class GNS3_Conn():
         # self.username = input("Username: ")
         # self.password = getpass("Password: ")
         # self.secret = getpass("Secret: ")
-        self.username = "mateusz"
+        self.username = "mateuuusz"
         self.password = "admin123"
         self.secret = "admin123"
 
 
     def _connect(self):
-        from netmiko import NetMikoTimeoutException
+        from netmiko import NetMikoTimeoutException, NetMikoAuthenticationException
         try:
-            print("Debug1")
             self.ssh = ConnectHandler(
                 host = self.host,
                 port = self.port,
@@ -109,19 +108,32 @@ class GNS3_Conn():
                 device_type = "linux",
                 system_host_keys = True,
                 allow_agent = True,
-                verbose = True,
+                verbose = False,
             )
         except NetMikoTimeoutException:
-            print("Debug4")
+            print("\n")
+            print("Can't connect to GNS3 server...")
+            print("Check your connectivity")
+            print("Exiting...\n")
+            exit()
+        except NetMikoAuthenticationException:
+            print("\n")
+            print("Can't connect to GNS3 server...")
+            print("Authentication problem ocur.")
+            print("Exiting...\n")
+            exit()
+        except Exception as err:
+            print("\n")
+            print("Can't connect to GNS3 server...")
+            print(f"Exception cour: {err}")
+            print("Exiting...\n")
+            exit()
 
 
     def _close(self):
-        if self.ssh:
-            if self.ssh.is_alive():
-                self.ssh.disconnect()
-            else:
-                pass
-        else:
+        try:
+            self.ssh.disconnect()
+        except:
             pass
 
 
@@ -218,4 +230,4 @@ def upload_basic_config(dev):
 
 
 if __name__ == "__main__":
-    pass
+    get_gns3_projects()
