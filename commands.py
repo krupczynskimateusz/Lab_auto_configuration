@@ -87,8 +87,8 @@ class Command():
 
 class Command_IOS(Command):
     """
-    Subclass of the Command object that extends
-    functionality and supports IOS configuration
+    Subclass of the Command object. 
+    Support for the Cisco IOS devices.
     """
 
 
@@ -242,9 +242,30 @@ class Command_IOS(Command):
 
     def create_loopback(self):
         """
-        Works in progress. 
+        The function givs commands to configure
+        interface loopback on device. 
         """
-        pass
+        num = self.num
+        lst_commands = [
+            "conf t",
+            "interface loopback 0",
+            f"ip address 1.1.1.{num} 255.255.255.255",
+            "end"
+        ]
+
+        return lst_commands
+
+
+
+class Command_C7200(Command_IOS):
+    """
+    Subclass of the Command object. 
+    Support for the Cisco c7200 devices.
+    """
+
+    def __init__(self, devobj):
+        super().__init__(devobj)
+
 
 
 def create_config_obj(devobj):
@@ -256,11 +277,15 @@ def create_config_obj(devobj):
     if devobj.vendor == None:
         pass
 
-    if devobj.vendor == "gns_switch":
+    elif devobj.vendor == "gns_switch":
         pass
 
     elif devobj.vendor == "vIOS":
         dev = Command_IOS(devobj)
+        return dev
+    
+    elif devobj.vendor == "c7200":
+        dev = Command_C7200(devobj)
         return dev
     
     else:
