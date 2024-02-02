@@ -168,6 +168,31 @@ class IOS(Device):
 
 
 
+class C7200(IOS):
+
+
+    def __init__(
+            self,
+            network: object,
+            gns_id: str,
+            name: str,
+            console_port: int
+            ):
+        super().__init__(
+            network,
+            gns_id,
+            name,
+            console_port
+            )
+        self.vendor = "C7200"
+        self.username = "cisco"
+        self.password = "cisco"
+        self.ip_mgmt = Network.get_ip_address()
+        self.ip_mgmt_mask = Network.get_ip_address_mask()
+        self.num = Device.give_number()
+
+
+
 def create_system(nodes, links):
 
     network_obj = Network(links)
@@ -177,9 +202,12 @@ def create_system(nodes, links):
         gns_id = dev[0]
         console_port = dev[1]
         name = dev[2]
-
+        
         if "vIOS" == dev[3]:
             node = IOS(network, gns_id, name, console_port)
+
+        elif "C7200" == dev[3]:
+            node = C7200(network, gns_id, name, console_port)
         
         elif "gns_switch" == dev[3]:
             node = GNS_Switch(network, gns_id, name, console_port)

@@ -284,7 +284,7 @@ def create_config_obj(devobj):
         dev = Command_IOS(devobj)
         return dev
     
-    elif devobj.vendor == "c7200":
+    elif devobj.vendor == "C7200":
         dev = Command_C7200(devobj)
         return dev
     

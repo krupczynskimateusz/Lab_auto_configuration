@@ -89,20 +89,18 @@ def execute_script(
     else:
         dct_nodes, dct_links = get_json_files(project_path)
         create_system(dct_nodes, dct_links)
-        show_in_file(dct_nodes, "file/dct_nodes_new.json")
-        show_in_file(dct_links, "file/dct_links_new.json")
+        # show_in_file(dct_nodes, "file/dct_nodes_new.json")
+        # show_in_file(dct_links, "file/dct_links_new.json")
 
         for dev in Device.dev_lst:
-            print(dev.name)
+            print(f"# Start {dev.name}...")
             upload_basic_config(dev)
-            print("\n")
-            print("#" * 20)
-            print("\n")
+
 
 
 def main():
 
-    selected_project = None
+    selected_project = ("number", 1)
     project_lst = None
     GNSServer = init()
 

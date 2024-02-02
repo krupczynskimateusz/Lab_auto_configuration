@@ -33,11 +33,10 @@ class Telnet_Conn():
                 )
             sleep(1)
         except ConnectionRefusedError:
-            print("\n")
             print(f"Can't connect to {self.name}...")
             print("Check if that device is up...")
             print("Exiting...\n")
-            exit()
+            return 
 
 
     def authenticate(self, output):
@@ -312,13 +311,22 @@ def prepare_project(GNSServer, project_to_download, path):
 
 
 def upload_basic_config(dev):
+    print("Create config...")
+
     if dev.vendor == "vIOS":
         command_obj = create_config_obj(dev) ## -> commands.py
-        tc = Telnet_Conn(dev)
-        tc.send_lst(command_obj)
+
+    elif dev.vendor == "C7200":
+        command_obj = create_config_obj(dev) ## -> commands.py
 
     else:
         pass
+
+    print("Sending connfig...")
+    tc = Telnet_Conn(dev)
+    tc.send_lst(command_obj)
+
+
 
 
 if __name__ == "__main__":
