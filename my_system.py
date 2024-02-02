@@ -171,7 +171,6 @@ class IOS(Device):
 def create_system(nodes, links):
 
     network_obj = Network(links)
-    nodes_lst = []
 
     for dev in nodes:
         network = network_obj.my_links(dev[0])
@@ -187,9 +186,8 @@ def create_system(nodes, links):
 
         else:
             node = Device(network, gns_id, name, console_port)
-        nodes_lst.append(node)
 
-    return nodes_lst
+    return 
 
 
 
