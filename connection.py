@@ -298,6 +298,7 @@ class GNS3_Conn():
 
 ##################################
 
+
 def get_gns3_projects(GNSServer):
     projects_lst = GNSServer.get_labs_names()
 
