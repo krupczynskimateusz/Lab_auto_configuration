@@ -1,221 +1,165 @@
 #!/usr/bin/env python3
 
+from my_devices import Network, Device, GNS_Switch, IOS, C7200
+from connection import GNS3_Conn
+from connection import get_gns3_projects
+from connection import get_project
+from gns_data import get_json_files
+from time import sleep
 
 
-class Network():
-    """
-    A network object based on which 
-    the necessary information about 
-    prefixes and free addresses is retrieved.
-    """
+
+def init_system():
+    gns_server_ip = "gns3.home"
+    lab = GNS3_Conn(gns_server_ip)
+    return lab
 
 
-    ipv4_addresses_pool = [f"192.168.10.{x}" for x in range(11, 40)]
-    ipv4_address_gatway = "192.168.10.1"
-    ipv4_address_mask = "25"
-    used_addresses = []
-
-    multiacces_addresses = [f"10.0.{x}.0" for x in range(1, 10)]
-    used_multiacces_addresses = []
+class Menu():
 
 
-    def __init__(self, links):
-        self.links = links
+    _selected_project = None
+    _project_lst = None
+    _lab = init_system()
+    _options_lst = [
+        "Show projects from gns3 server.",
+        "Set project.",
+        "Execute script.",
+        "Exit."
+    ]
 
-
-    def my_links(self, gns_id):
-        """
-        The function returns a list of connections in which the device participates.
-
-        :parm: Device GNS_ID
-        :return: List of links. 
-        """
-        
-        my_links = []
-        for link in self.links:
-            for node in link:
-                if node[0] == gns_id:
-                    my_links.append(link)
-        return my_links
+    def __init__(self):
+        pass
 
 
     @classmethod
-    def get_ip_address(cls):
-        """
-        The function give free ip address for managment purpose.
+    def show_projects(cls):
 
-        :return: IPv4 address string.
-        """
-        
-        ip = cls.ipv4_addresses_pool[0]
-        cls.used_addresses.append(ip)
-        cls.ipv4_addresses_pool.remove(ip)
-        return ip
+        _project_lst = get_gns3_projects(cls._lab)
 
+        print("\n")
+        print("#" * 4, "Project list:")
 
-    @classmethod
-    def get_multiacces_address(cls):
-        """
-        The function give prefix for switch for multiacces purpose. 
+        for i, name in enumerate(_project_lst, start = 1):
+            tmp_name = name[0].removesuffix(".gns3")
+            print(f"# {i:02}) {tmp_name}")
+            
+        print("\n")
+        chose = input("Click any charakter for back to menu...")
 
-        :return: IPv4 address.
-        """
-        
-        ip = cls.multiacces_addresses[0]
-        cls.used_multiacces_addresses.append(ip)
-        cls.multiacces_addresses.remove(ip)
-        return ip
+        return
 
 
     @classmethod
-    def get_ip_address_mask(cls):
-        return cls.ipv4_address_mask
-
-
-    @staticmethod
-    def show_used_addresses():
-        return Device.used_addresses
-
-
-    @staticmethod
-    def show_free_addresses():
-        return Device.ipv4_addresses_pool
-
-
-
-class Device():
-
-
-    dev_lst = []
-    dev_num = 0
-
-
-    def __init__(
-            self,
-            network: object,
-            gns_id: str,
-            name: str,
-            console_port: int,
-            domain: str = "lab.home"
-            ):
-        self.network = network
-        self.gns_id = gns_id
-        self.name = name
-        self.console_port = console_port
-        self.vendor = None
-        self.ip_mgmt = None
-        self.ip_mgmt_mask = None
-        self.links = None
-        self.num = None
-        self.ip_domain = domain
-        Device.dev_lst.append(self)
-
-
-    def get_links(self):
-        return self.network.connection_create(self.gns_id)
-
-
+    def set_project(cls):
+        print("\n")
+        print("#" * 26, "\n")
+        cls._selected_project = input("# Enter project name or number: ")
+        try:
+            cls._selected_project = ("number", int(cls.show_projects_selected_project))
+            return cls._selected_project
+        except:
+            cls_selected_project = ("string", cls._selected_project)
+            return cls._selected_project
+        
+    
     @classmethod
-    def give_number(cls):
-        cls.dev_num += 1
-        return cls.dev_num 
-
-
-
-class GNS_Switch(Device):
-
-
-    def __init__(
-            self,
-            network: object,
-            gns_id: str,
-            name: str,
-            console_port: int
+    def execute_script(
+            cls,
+            path: str = "/tmp/gns3_project.gns3"
             ):
-        super().__init__(
-            network,
-            gns_id,
-            name,
-            console_port
-            )
-        self.vendor = "gns_switch"
-        self.multiacces_prefix = Network.get_multiacces_address()
-
-
-
-class IOS(Device):
-
-
-    def __init__(
-            self,
-            network: object,
-            gns_id: str,
-            name: str,
-            console_port: int
-            ):
-        super().__init__(
-            network,
-            gns_id,
-            name,
-            console_port
-            )
-        self.vendor = "vIOS"
-        self.username = "cisco"
-        self.password = "cisco"
-        self.ip_mgmt = Network.get_ip_address()
-        self.ip_mgmt_mask = Network.get_ip_address_mask()
-        self.num = Device.give_number()
-
-
-
-class C7200(IOS):
-
-
-    def __init__(
-            self,
-            network: object,
-            gns_id: str,
-            name: str,
-            console_port: int
-            ):
-        super().__init__(
-            network,
-            gns_id,
-            name,
-            console_port
-            )
-        self.vendor = "C7200"
-        self.username = "cisco"
-        self.password = "cisco"
-        self.ip_mgmt = Network.get_ip_address()
-        self.ip_mgmt_mask = Network.get_ip_address_mask()
-        self.num = Device.give_number()
-
-
-
-def create_system(nodes, links):
-
-    network_obj = Network(links)
-
-    for dev in nodes:
-        network = network_obj.my_links(dev[0])
-        gns_id = dev[0]
-        console_port = dev[1]
-        name = dev[2]
+        if cls._selected_project == None:
+            return print("You need to select project...")
         
-        if "vIOS" == dev[3]:
-            node = IOS(network, gns_id, name, console_port)
+        if cls._project_lst == None:
+            cls._project_lst = get_gns3_projects(cls._lab)
 
-        elif "C7200" == dev[3]:
-            node = C7200(network, gns_id, name, console_port)
-        
-        elif "gns_switch" == dev[3]:
-            node = GNS_Switch(network, gns_id, name, console_port)
+        if cls._selected_project[0] == "string":
+            for project in cls._project_lst:
+                if cls._selected_project[1] in project[0]:
+                    project_to_download = project
+
+        elif cls._sselected_project[0] == "number":
+            _project_to_download = cls._sproject_lst[cls._sselected_project[1] - 1]
 
         else:
-            node = Device(network, gns_id, name, console_port)
+            print("Error with selected_project ocur....")
+            exit()
 
-    return 
+        project_path = get_project(
+            cls._lab,
+            _project_to_download,
+            path
+            )
+
+        if not project_path:
+            return False
+        
+        else:
+            from connection import upload_basic_config
+
+            dct_nodes, dct_links = get_json_files(project_path)
+            cls.create_system(dct_nodes, dct_links)
+            # show_in_file(dct_nodes, "file/dct_nodes_new.json")
+            # show_in_file(dct_links, "file/dct_links_new.json")
+
+            for dev in Device.dev_lst:
+                print(f"# Start {dev.name}...")
+                upload_basic_config(dev)
+
+
+    @staticmethod
+    def create_system(dct_nodes, dct_links):
+
+        network_obj = Network(dct_links)
+
+        for dev in dct_nodes:
+            network = network_obj.my_links(dev[0])
+            gns_id = dev[0]
+            console_port = dev[1]
+            name = dev[2]
+            
+            if "vIOS" == dev[3]:
+                IOS(network, gns_id, name, console_port)
+
+            elif "C7200" == dev[3]:
+                C7200(network, gns_id, name, console_port)
+            
+            elif "gns_switch" == dev[3]:
+                GNS_Switch(network, gns_id, name, console_port)
+
+            else:
+                Device(network, gns_id, name, console_port)
+
+        return 
+    
+    @classmethod
+    def show_menu(cls):
+        print("\n")
+        print("#" * 10, "MENU", "#" * 10, "\n")
+
+        for i, opt in enumerate(cls._options_lst, start = 1):
+            print(f"# {i}) {opt}")
+
+        chose = input("# Chose option: ")
+
+        if chose == "1":
+            cls.show_projects()
+
+        elif chose == "2":
+            cls._selected_project = cls.set_project()
+
+        elif chose == "3":
+            cls.execute_script()
+            sleep(1)
+
+        elif chose == "4":
+            print("Exiting...")
+            exit()
+
+        else: 
+            print("You need to pick valid option...")
+            sleep(1)
 
 
 
