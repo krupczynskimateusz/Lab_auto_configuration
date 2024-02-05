@@ -47,6 +47,10 @@ def get_nodes_info(nodes):
             if "vios-adventerprisek9" in node["properties"]["hda_disk_image"]:
                 vendor = "vIOS"
 
+        elif "image" in node["properties"].keys():
+            if "c7200-adventerprisek9-mz" in node["properties"]["image"]:
+                vendor = "C7200"
+
         elif "ethernet_switch" in node["node_type"]:
             vendor = "gns_switch"
             
