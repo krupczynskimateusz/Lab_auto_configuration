@@ -4,7 +4,7 @@ import json
 
 
 ## Getting lab config from .gns3 file.
-def get_json_files(path):
+def get_topology(path):
     with open(path) as f:
         dct_file = json.load(f)
 

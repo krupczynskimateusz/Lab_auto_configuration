@@ -5,7 +5,6 @@ from netmiko import ConnectHandler, file_transfer
 from paramiko import SSHClient
 from scp import SCPClient
 from time import sleep
-from commands import create_config_obj
 from getpass import getpass
 from hashlib import sha1 as hash_sha1
 from os import remove as os_remove
@@ -13,9 +12,10 @@ from os import remove as os_remove
 
 class Telnet_Conn():
 
+    host_ip = None
 
-    def __init__(self, devobj, host_ip):
-        self.host = host_ip
+    def __init__(self, devobj):
+        self.host = Telnet_Conn.host_ip
         self.port = devobj.console_port
         self.name = devobj.name
         self.username = devobj.username
@@ -90,6 +90,7 @@ class Telnet_Conn():
 
 
 class GNS3_Conn():
+
 
     def __init__(self, lab_ip):
         self.host = lab_ip
@@ -294,6 +295,15 @@ class GNS3_Conn():
 
 ##################################
 
+def get_Telnet_Conn(obj):
+    return Telnet_Conn(obj)
+
+def set_Telnet_ip(ip):
+    Telnet_Conn.host_ip = ip
+
+def get_lab_conn(lab, ip):
+    if lab == "GNS3":
+        return GNS3_Conn(ip)
 
 def get_gns3_projects(GNSServer):
     projects_lst = GNSServer.get_labs_names()
@@ -307,21 +317,21 @@ def get_project(GNSServer, project_to_download, path):
     return path
 
 
-def upload_basic_config(dev, host_ip):
-    print("Create config...")
+# def upload_basic_config(dev, host_ip):
+#     print("Create config...")
 
-    if dev.vendor == "vIOS":
-        command_obj = create_config_obj(dev) ## -> commands.py
+#     if dev.vendor == "vIOS":
+#         command_obj = create_config_obj(dev) ## -> commands.py
 
-    elif dev.vendor == "C7200":
-        command_obj = create_config_obj(dev) ## -> commands.py
+#     elif dev.vendor == "C7200":
+#         command_obj = create_config_obj(dev) ## -> commands.py
 
-    else:
-        pass
+#     else:
+#         pass
 
-    print("Sending connfig...")
-    tc = Telnet_Conn(dev, host_ip)
-    tc.send_lst(command_obj)
+#     print("Sending connfig...")
+#     tc = Telnet_Conn(dev, host_ip)
+#     tc.send_lst(command_obj)
 
 
 

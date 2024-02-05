@@ -26,7 +26,7 @@ class Network():
         """
         The function returns a list of connections in which the device participates.
 
-        :parm: Device GNS_ID
+        :parm: Node GNS_ID
         :return: List of links. 
         """
         
@@ -73,16 +73,16 @@ class Network():
 
     @staticmethod
     def show_used_addresses():
-        return Device.used_addresses
+        return Node.used_addresses
 
 
     @staticmethod
     def show_free_addresses():
-        return Device.ipv4_addresses_pool
+        return Node.ipv4_addresses_pool
 
 
 
-class Device():
+class Node():
 
 
     dev_lst = []
@@ -107,7 +107,7 @@ class Device():
         self.links = None
         self.num = None
         self.ip_domain = domain
-        Device.dev_lst.append(self)
+        Node.dev_lst.append(self)
 
 
     def get_links(self):
@@ -121,7 +121,7 @@ class Device():
 
 
 
-class GNS_Switch(Device):
+class GNS_Switch(Node):
 
 
     def __init__(
@@ -142,7 +142,7 @@ class GNS_Switch(Device):
 
 
 
-class IOS(Device):
+class IOS(Node):
 
 
     def __init__(
@@ -150,7 +150,8 @@ class IOS(Device):
             network: object,
             gns_id: str,
             name: str,
-            console_port: int
+            console_port: int,
+            lab_ip: str
             ):
         super().__init__(
             network,
@@ -163,7 +164,9 @@ class IOS(Device):
         self.password = "cisco"
         self.ip_mgmt = Network.get_ip_address()
         self.ip_mgmt_mask = Network.get_ip_address_mask()
-        self.num = Device.give_number()
+        self.num = Node.give_number()
+        self.telnet_conn = lab_ip
+        self.ssh_conn = None ## Not implemented yet
 
 
 
@@ -175,20 +178,23 @@ class C7200(IOS):
             network: object,
             gns_id: str,
             name: str,
-            console_port: int
+            console_port: int,
+            lab_ip: str
             ):
         super().__init__(
             network,
             gns_id,
             name,
-            console_port
+            console_port,
             )
         self.vendor = "C7200"
         self.username = "cisco"
         self.password = "cisco"
         self.ip_mgmt = Network.get_ip_address()
         self.ip_mgmt_mask = Network.get_ip_address_mask()
-        self.num = Device.give_number()
+        self.num = Node.give_number()
+        self.telnet_conn = lab_ip
+        self.ssh_conn = None ## Not implemented yet
 
 
 
