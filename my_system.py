@@ -105,7 +105,7 @@ class Menu():
 
             for dev in Device.dev_lst:
                 print(f"# Start {dev.name}...")
-                upload_basic_config(dev)
+                upload_basic_config(dev, cls._lab)
 
 
     @staticmethod

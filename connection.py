@@ -11,81 +11,81 @@ from hashlib import sha1 as hash_sha1
 from os import remove as os_remove
 
 
-# class Telnet_Conn():
+class Telnet_Conn():
 
 
-#     def __init__(self, devobj):
-#         self.host = gns_server_ip
-#         self.port = devobj.console_port
-#         self.name = devobj.name
-#         self.username = devobj.username
-#         self.password = devobj.password
+    def __init__(self, devobj, host_ip):
+        self.host = host_ip
+        self.port = devobj.console_port
+        self.name = devobj.name
+        self.username = devobj.username
+        self.password = devobj.password
 
 
-#     def connect(self):
-#         try:
-#             self.tc = Telnet(
-#                 host = self.host,
-#                 port = str(self.port)
-#                 )
-#             sleep(1)
-#         except ConnectionRefusedError:
-#             print(f"Can't connect to {self.name}...")
-#             print("Check if that device is up...")
-#             print("Exiting...\n")
-#             return 
+    def connect(self):
+        try:
+            self.tc = Telnet(
+                host = self.host,
+                port = str(self.port)
+                )
+            sleep(1)
+        except ConnectionRefusedError:
+            print(f"Can't connect to {self.name}...")
+            print("Check if that device is up...")
+            print("Exiting...\n")
+            return 
 
 
-#     def authenticate(self, output):
-#         if "User" in output or "user" in output:
-#             self.tc.write(self.username.encode(), b"\n")
-#             sleep(1)
-#             self.tc.write(self.password.encode(), b"\n")
-#         else:
-#             pass
+    def authenticate(self, output):
+        if "User" in output or "user" in output:
+            self.tc.write(self.username.encode(), b"\n")
+            sleep(1)
+            self.tc.write(self.password.encode(), b"\n")
+        else:
+            pass
 
 
-#     def close(self):
-#         self.tc.close()
+    def close(self):
+        self.tc.close()
 
 
-#     def first_send(self, timeout = 1):
-#         self.connect()
+    def first_send(self, timeout = 1):
+        self.connect()
         
-#         ## Don't work. Somehow you need to press enter on remote console.
-#         self.tc.write(b"\n")
+        ## Don't work. Somehow you need to press enter on remote console.
+        self.tc.write(b"\n")
 
-#         self.close()
-
-
-#     def send(self, command, timeout = 0.5):
-#         self.connect()
-
-#         command = command + "\n"
-#         self.tc.write(command.encode())
-#         sleep(timeout)
-
-#         self.close()
+        self.close()
 
 
-#     def send_lst(self, commands_lst, timeout = 0.5):
-#         self.connect()
+    def send(self, command, timeout = 0.5):
+        self.connect()
 
-#         for cmd in commands_lst:
-#             if isinstance(cmd, list):
-#                 command = cmd[0] + "\n"
-#                 self.tc.write(command.encode())
-#                 sleep(cmd[1])
-#             else:
-#                 cmd = cmd + "\n"
-#                 self.tc.write(cmd.encode())
-#                 sleep(timeout)
+        command = command + "\n"
+        self.tc.write(command.encode())
+        sleep(timeout)
 
-#         self.close()
+        self.close()
 
 
-#     def show_all(self):
-#         return self.tc.read_all()
+    def send_lst(self, commands_lst, timeout = 0.5):
+        self.connect()
+
+        for cmd in commands_lst:
+            if isinstance(cmd, list):
+                command = cmd[0] + "\n"
+                self.tc.write(command.encode())
+                sleep(cmd[1])
+            else:
+                cmd = cmd + "\n"
+                self.tc.write(cmd.encode())
+                sleep(timeout)
+
+        self.close()
+
+
+    def show_all(self):
+        return self.tc.read_all()
 
 
 
@@ -307,21 +307,21 @@ def get_project(GNSServer, project_to_download, path):
     return path
 
 
-# def upload_basic_config(dev):
-#     print("Create config...")
+def upload_basic_config(dev, host_ip):
+    print("Create config...")
 
-#     if dev.vendor == "vIOS":
-#         command_obj = create_config_obj(dev) ## -> commands.py
+    if dev.vendor == "vIOS":
+        command_obj = create_config_obj(dev) ## -> commands.py
 
-#     elif dev.vendor == "C7200":
-#         command_obj = create_config_obj(dev) ## -> commands.py
+    elif dev.vendor == "C7200":
+        command_obj = create_config_obj(dev) ## -> commands.py
 
-#     else:
-#         pass
+    else:
+        pass
 
-#     print("Sending connfig...")
-#     tc = Telnet_Conn(dev)
-#     tc.send_lst(command_obj)
+    print("Sending connfig...")
+    tc = Telnet_Conn(dev, host_ip)
+    tc.send_lst(command_obj)
 
 
 
