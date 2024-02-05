@@ -1,1 +1,1 @@
-# Lab auto configuration
+# Lab managment
