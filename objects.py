@@ -158,10 +158,10 @@ class My_Menu():
                     print("Create telnet connections...")
                     _tc = Telnet_Conn(device)
                     ### Add options
-                    _tc.send_lst(device.commands.basic_config())
-                    _tc.send_lst(device.commands.ssh_config())
+                    # _tc.send_lst(device.commands.basic_config())
+                    # _tc.send_lst(device.commands.ssh_config())
                     _tc.send_lst(device.commands.create_mgmt())
-                    _tc.send_lst(device.commands.create_config_interfaces())
+                    # _tc.send_lst(device.commands.create_config_interfaces())
 
 
                 except:
@@ -968,7 +968,11 @@ class Command_IOS(Command):
             "crypto key generate rsa",
             ["2048", 8],
             "ip ssh version 2",
+            "ip ssh pubkey-chain",
+            "username cisco",
+            "key-hash ssh-rsa 3DDF6DD82060F31277A6004B176786D4",
             "line vty 0 4",
+            "exec-timeout 0 0"
             "transport input ssh",
             "login local",
             "end"
@@ -989,6 +993,7 @@ class Command_IOS(Command):
         lst_commands = [
             "conf t",
             "vrf definition mgmt",
+            "address-family ipv4 unicast",
             "exit",
             f"interface {connections[-1][0]}",
             "vrf forwarding mgmt",
