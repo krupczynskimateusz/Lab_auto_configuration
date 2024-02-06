@@ -550,7 +550,8 @@ class GNS3_Conn():
         :param: A project that needs to be downloaded.
         :param: local_path where a project will be downloaded.
         """
-
+        print(f"Start procedure copying project to local device to: {local_path}")
+        
         copy_command = (
             "sudo cp " 
             f"{self.gns_files_local_path}{project_to_download[1]}"
@@ -561,7 +562,7 @@ class GNS3_Conn():
             f"/tmp/{project_to_download[0]}"
         )
 
-        print(f"Start procedure copying project to local device to: {local_path}")
+        
         print("Remote: Copy to /tmp/...")
         self.send(copy_command)
 
