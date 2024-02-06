@@ -4,7 +4,6 @@ from netmiko import ConnectHandler, file_transfer
 from paramiko import SSHClient
 from scp import SCPClient
 from time import sleep
-from getpass import getpass
 from hashlib import sha1 as hash_sha1
 from os import remove as os_remove
 import json
@@ -36,6 +35,7 @@ class My_Menu():
 
 
     def show_menu(self):
+        print("\n")
         print("#" * 10, "MENU", "#" * 10, "\n")
 
         for i, option in enumerate(self._options_lst, start = 1):
@@ -43,7 +43,7 @@ class My_Menu():
 
         chose = input("# Chose option: ")
         print("#" * 26)
-        
+
         if chose == "1":
             self.show_projects()
 
@@ -64,10 +64,10 @@ class My_Menu():
 
 
     def show_projects(self):
-
         _project_lst = self.lab_server.get_labs_names()
-
-        print("#" * 4, "Project list:", "\n")
+        print("\n")
+        print("#" * 26)
+        print("# Project list:", "\n")
 
         for _index, _name in enumerate(_project_lst, start = 1):
             _tmp_name = _name[0].removesuffix(".gns3")
@@ -80,7 +80,8 @@ class My_Menu():
 
     @classmethod
     def set_project(cls):
-        print("#" * 26, "\n")
+        print("\n")
+        print("#" * 26)
         cls._selected_project = input("# Enter project name or number: ")
         try:
             cls._selected_project = ("number", int(cls._selected_project))
@@ -367,48 +368,60 @@ class GNS3_Conn():
         self.host = lab_ip
         self.port = "22"
         self.gns_files_path = "/opt/gns3/projects/"
+        self._set_con_parametrs = False
 
+    def configure_conn_paramters(self):
+        from getpass import getpass
+
+        print("\n")
+        print("GNS3 parametr configuration...")
+        # self.username = input("Username: ")
+        # self.password = getpass("Password: ")
+        # self.secret = getpass("Secret: ")
+
+        ### Test accout to delete
+        self.username = "mateusz"
+        self.password = "admin123"
+        self.secret = "admin123"
+        self._set_con_parametrs = True
+        return
 
     def _connect(self):
         """Connect to gns3 server"""
         from netmiko import NetMikoTimeoutException
         from netmiko import NetMikoAuthenticationException
 
-        print("GNS3 connection parametr:")
-        # self.username = input("Username: ")
-        # self.password = getpass("Password: ")
-        # self.secret = getpass("Secret: ")
-        self.username = "mateusz"
-        self.password = "admin123"
-        self.secret = "admin123"
-
-        try:
-            self.ssh = ConnectHandler(
-                host = self.host,
-                port = self.port,
-                username = self.username,
-                password = self.password,
-                secret = self.secret,
-                device_type = "linux",
-                system_host_keys = True,
-                allow_agent = True,
-                verbose = False,
-            )
-        except NetMikoTimeoutException:
-            print("Can't connect to GNS3 server...")
-            print("Check your connectivity")
-            print("Exiting...\n")
-            exit()
-        except NetMikoAuthenticationException:
-            print("Can't connect to GNS3 server...")
-            print("Authentication problem ocur.")
-            print("Exiting...\n")
-            exit()
-        except Exception as err:
-            print("Can't connect to GNS3 server...")
-            print(f"Exception cour: {err}")
-            print("Exiting...\n")
-            exit()
+        if self._set_con_parametrs == False:
+            self.configure_conn_paramters()
+            self._connect()
+        else:
+            try:
+                self.ssh = ConnectHandler(
+                    host = self.host,
+                    port = self.port,
+                    username = self.username,
+                    password = self.password,
+                    secret = self.secret,
+                    device_type = "linux",
+                    system_host_keys = True,
+                    allow_agent = True,
+                    verbose = False,
+                )
+            except NetMikoTimeoutException:
+                print("Can't connect to GNS3 server...")
+                print("Check your connectivity")
+                print("Exiting...\n")
+                exit()
+            except NetMikoAuthenticationException:
+                print("Can't connect to GNS3 server...")
+                print("Authentication problem ocur.")
+                print("Exiting...\n")
+                exit()
+            except Exception as err:
+                print("Can't connect to GNS3 server...")
+                print(f"Exception cour: {err}")
+                print("Exiting...\n")
+                exit()
 
 
     def _close(self):
