@@ -3,10 +3,11 @@ from telnetlib import Telnet
 from netmiko import ConnectHandler, file_transfer
 from paramiko import SSHClient
 from scp import SCPClient
-from time import sleep
 from hashlib import sha1 as hash_sha1
+from time import sleep
 from os import remove as os_remove
 import json
+
 
 
 _lab_ip = "gns3.home"
@@ -21,8 +22,6 @@ _local_path = "/tmp/gns3_project.gns3"
 class My_Menu():
 
     _system = False
-    _selected_project = None
-    _project_lst = None
     _lab_ip = _lab_ip
 
 
@@ -32,6 +31,8 @@ class My_Menu():
         self.lab_server = GNS3_Conn(_lab_ip)
         self.data_parser = Data_Parser()
         self._lab_ip = _lab_ip
+        self._project_lst = None
+        self._selected_project = None
 
 
     def show_menu(self):
@@ -42,7 +43,6 @@ class My_Menu():
             print(f"# {i}) {option}")
 
         chose = input("# Chose option: ")
-        print("#" * 26)
 
         if chose == "1":
             self.show_projects()
@@ -64,12 +64,14 @@ class My_Menu():
 
 
     def show_projects(self):
-        _project_lst = self.lab_server.get_labs_names()
+        if self._project_lst == None:
+            self._project_lst = self.lab_server.get_labs_names()
+
         print("\n")
         print("#" * 26)
         print("# Project list:", "\n")
 
-        for _index, _name in enumerate(_project_lst, start = 1):
+        for _index, _name in enumerate(self._project_lst, start = 1):
             _tmp_name = _name[0].removesuffix(".gns3")
             print(f"# {_index:02}) {_tmp_name}")
 
@@ -92,19 +94,42 @@ class My_Menu():
 
 
     def execute_script(self):
+        print("\n")
+        print("#" * 26)
+
         if self._selected_project == None:
             return print("You need to select project...")
         
         if self._project_lst == None:
+            print("You need to download available projects from the server...")
             self._project_lst = self.lab_server.get_labs_names()
 
         if self._selected_project[0] == "string":
-            for project in self._project_lst:
-                if self._selected_project[1] in project[0]:
-                    project_to_download = project
+            _project_num = 0
+            _tmp_project = None
+            print("Looking for project...")
 
-        elif self._sselected_project[0] == "number":
-            _project_to_download = self._sproject_lst[self._selected_project[1] - 1]
+            for project in self._project_lst:
+
+                if self._selected_project[1] in project[0]:
+                    _project_num += 1
+                    _tmp_project = project
+
+            if _project_num == 1:
+                _project_to_download = _tmp_project
+
+            elif _project_num > 1:
+                print(
+                    "Too many similar project...\n"
+                    "Pleas be more specific with name or use number..."
+                    )
+                return
+
+            else:
+                print("Can't find project...")
+
+        elif self._selected_project[0] == "number":
+            _project_to_download = self._project_lst[self._selected_project[1] - 1]
 
         else:
             print("Error with selected_project ocur....")
@@ -115,6 +140,7 @@ class My_Menu():
                 _project_to_download,
                 self._local_path
                 )
+
         except:
             return "Can't download project to local machine..."
 
@@ -374,6 +400,7 @@ class GNS3_Conn():
         from getpass import getpass
 
         print("\n")
+        print("#" * 26)
         print("GNS3 parametr configuration...")
         # self.username = input("Username: ")
         # self.password = getpass("Password: ")
@@ -435,7 +462,7 @@ class GNS3_Conn():
     def send(self, command: str):
         """Simple sending of command """
         self._connect()
-
+        print(command)
         if "sudo" in command:
             self.ssh.enable()
         output = self.ssh.send_command(command)
@@ -523,7 +550,6 @@ class GNS3_Conn():
         :param: A project that needs to be downloaded.
         :param: local_path where a project will be downloaded.
         """
-        print(f"Copying project to local device to: {local_path}")
 
         copy_command = (
             "sudo cp " 
@@ -534,8 +560,12 @@ class GNS3_Conn():
             f"sudo chown {self.username}:{self.username} "
             f"/tmp/{project_to_download[0]}"
         )
+
+        print(f"Start procedure copying project to local device to: {local_path}")
+        print("Remote: Copy to /tmp/...")
         self.send(copy_command)
 
+        print("Remote: Get file hash...")
         check_sha1_command = f"sha1sum /tmp/{project_to_download[0]}"
         remote_sha1 = self.send(check_sha1_command)
         remote_sha1 = remote_sha1.split()
