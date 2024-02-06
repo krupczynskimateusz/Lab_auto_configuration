@@ -321,11 +321,14 @@ def upload_basic_config(dev):
         command_obj = create_config_obj(dev) ## -> commands.py
 
     else:
-        pass
+        return
 
     print("Sending connfig...")
     tc = Telnet_Conn(dev)
-    tc.send_lst(command_obj)
+    tc.send_lst(command_obj.basic_config())
+    tc.send_lst(command_obj.ssh_config())
+    tc.send_lst(command_obj.create_ip_mgmt())
+    tc.send_lst(command_obj.create_config_interfaces())
 
 
 

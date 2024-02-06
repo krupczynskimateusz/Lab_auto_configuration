@@ -169,6 +169,7 @@ class Command_IOS(Command):
         lst_commands = [
             "conf t",
             "vrf definition mgmt",
+            "address-family ipv4 unicast",
             "exit",
             f"interface {connections[-1][0]}",
             "vrf forwarding mgmt",
