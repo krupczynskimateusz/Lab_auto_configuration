@@ -317,21 +317,21 @@ def get_project(GNSServer, project_to_download, path):
     return path
 
 
-# def upload_basic_config(dev, host_ip):
-#     print("Create config...")
+def upload_basic_config(dev, host_ip):
+    print("Create config...")
 
-#     if dev.vendor == "vIOS":
-#         command_obj = create_config_obj(dev) ## -> commands.py
+    if dev.vendor == "vIOS":
+        command_obj = create_config_obj(dev) ## -> commands.py
 
-#     elif dev.vendor == "C7200":
-#         command_obj = create_config_obj(dev) ## -> commands.py
+    elif dev.vendor == "C7200":
+        command_obj = create_config_obj(dev) ## -> commands.py
 
-#     else:
-#         pass
+    else:
+        pass
 
-#     print("Sending connfig...")
-#     tc = Telnet_Conn(dev, host_ip)
-#     tc.send_lst(command_obj)
+    print("Sending connfig...")
+    tc = Telnet_Conn(dev, host_ip)
+    tc.send_lst(command_obj)
 
 
 
