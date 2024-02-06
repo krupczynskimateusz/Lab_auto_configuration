@@ -19,6 +19,8 @@ _options_lst = [
 ]
 _local_path = "/tmp/gns3_project.gns3"
 
+
+
 class My_Menu():
 
     _system = False
@@ -158,10 +160,10 @@ class My_Menu():
                     print("Create telnet connections...")
                     _tc = Telnet_Conn(device)
                     ### Add options
-                    # _tc.send_lst(device.commands.basic_config())
-                    # _tc.send_lst(device.commands.ssh_config())
+                    _tc.send_lst(device.commands.basic_config())
+                    _tc.send_lst(device.commands.ssh_config())
                     _tc.send_lst(device.commands.create_mgmt())
-                    # _tc.send_lst(device.commands.create_config_interfaces())
+                    _tc.send_lst(device.commands.create_config_interfaces())
 
 
                 except:
