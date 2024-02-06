@@ -30,7 +30,7 @@ class My_Menu():
         self._local_path = _local_path
         self.lab_server = GNS3_Conn(My_Menu._lab_ip)
         self.data_parser = Data_Parser()
-        self._lab_ip = _lab_ip
+        self._lab_ip = My_Menu._lab_ip
         self._project_lst = None
         self._selected_project = None
         self._system = My_Menu._system
@@ -146,13 +146,12 @@ class My_Menu():
 
         except:
             return "Can't download project to local machine..."
-
+        project_path = "/tmp/gns3_project.gns3"
         try:
             self.data_parser.get_topology_gns3(project_path)
             print("Creating device objects...")
-            print(self.create_system())
+            self.create_system()
 
-            print("test3")
             for device in Device.dev_lst:
                 print(f"# Start {device.name}...")
                 try:
@@ -174,23 +173,21 @@ class My_Menu():
 
 
     def create_system(self):
-        print("test1")
         if self._system == False:
             network_obj = Network(self.data_parser.links)
-
-            for node in self.data_parser.nodes:
+            nodes_dct = self.data_parser.nodes
+            for node in nodes_dct:
                 network = network_obj.my_links(node[0])
                 gns_id = node[0]
                 console_port = node[1]
                 name = node[2]
-                
+
                 if "vIOS" == node[3]:
                     IOS(
                         network,
                         gns_id,
                         name,
-                        console_port,
-                        self._lab_ip
+                        console_port
                         )
 
                 elif "C7200" == node[3]:
@@ -198,10 +195,9 @@ class My_Menu():
                         network,
                         gns_id,
                         name,
-                        console_port,
-                        self._lab_ip
+                        console_port
                         )
-                
+
                 elif "gns_switch" == node[3]:
                     GNS_Switch(
                         network,
@@ -217,7 +213,9 @@ class My_Menu():
                         name,
                         console_port
                         )
+
             self._system = True
+            print("Created...")
         else:
             print("System created.")
 
@@ -335,16 +333,16 @@ class Telnet_Conn():
             print(f"Can't connect to {self.name}...")
             print("Check if that device is up...")
             print("Exiting...\n")
-            return 
+            return
 
-
-    def authenticate(self, output):
-        if "User" in output or "user" in output:
-            self.tc.write(self.username.encode(), b"\n")
-            sleep(1)
-            self.tc.write(self.password.encode(), b"\n")
-        else:
-            pass
+    ## Probably dont needed
+    # def authenticate(self, output):
+    #     if "User" in output or "user" in output:
+    #         self.tc.write(self.username.encode(), b"\n")
+    #         sleep(1)
+    #         self.tc.write(self.password.encode(), b"\n")
+    #     else:
+    #         pass
 
 
     def close(self):
@@ -776,8 +774,7 @@ class IOS(Device):
             network: object,
             gns_id: str,
             name: str,
-            console_port: int,
-            lab_ip: str
+            console_port: int
             ):
         super().__init__(
             network,
@@ -804,15 +801,15 @@ class C7200(IOS):
             network: object,
             gns_id: str,
             name: str,
-            console_port: int,
-            lab_ip: str
+            console_port: int
             ):
         super().__init__(
             network,
             gns_id,
             name,
-            console_port,
+            console_port
             )
+        print("Test")
         self.vendor = "C7200"
         self.username = "cisco"
         self.password = "cisco"
