@@ -28,11 +28,12 @@ class My_Menu():
     def __init__(self):
         self._options_lst = _options_lst
         self._local_path = _local_path
-        self.lab_server = GNS3_Conn(_lab_ip)
+        self.lab_server = GNS3_Conn(My_Menu._lab_ip)
         self.data_parser = Data_Parser()
         self._lab_ip = _lab_ip
         self._project_lst = None
         self._selected_project = None
+        self._system = My_Menu._system
 
 
     def show_menu(self):
@@ -140,6 +141,8 @@ class My_Menu():
                 _project_to_download,
                 self._local_path
                 )
+            if project_path == False:
+                return
 
         except:
             return "Can't download project to local machine..."
@@ -147,10 +150,9 @@ class My_Menu():
         try:
             self.data_parser.get_topology_gns3(project_path)
             print("Creating device objects...")
-            self.create_system()
-            # show_in_file(dct_nodes, "file/dct_nodes_new.json")
-            # show_in_file(dct_links, "file/dct_links_new.json")
+            print(self.create_system())
 
+            print("test3")
             for device in Device.dev_lst:
                 print(f"# Start {device.name}...")
                 try:
@@ -172,7 +174,8 @@ class My_Menu():
 
 
     def create_system(self):
-        if My_Menu._system == False:
+        print("test1")
+        if self._system == False:
             network_obj = Network(self.data_parser.links)
 
             for node in self.data_parser.nodes:
@@ -214,10 +217,11 @@ class My_Menu():
                         name,
                         console_port
                         )
-            My_Menu._system = True
+            self._system = True
         else:
             print("System created.")
-        return 
+
+        return
 
 
 
@@ -462,7 +466,7 @@ class GNS3_Conn():
     def send(self, command: str):
         """Simple sending of command """
         self._connect()
-        print(command)
+
         if "sudo" in command:
             self.ssh.enable()
         output = self.ssh.send_command(command)
@@ -550,11 +554,14 @@ class GNS3_Conn():
         :param: A project that needs to be downloaded.
         :param: local_path where a project will be downloaded.
         """
-        print(f"Start procedure copying project to local device to: {local_path}")
-        
+        print(
+            "Start procedure copying project" 
+            f"to local device to: {local_path}..."
+            )
+
         copy_command = (
-            "sudo cp " 
-            f"{self.gns_files_local_path}{project_to_download[1]}"
+            "sudo cp "
+            f"{self.gns_files_path}{project_to_download[1]}"
             f"/{project_to_download[0]} "
             f"/tmp/{project_to_download[0]}"
             " && "
@@ -562,7 +569,6 @@ class GNS3_Conn():
             f"/tmp/{project_to_download[0]}"
         )
 
-        
         print("Remote: Copy to /tmp/...")
         self.send(copy_command)
 
@@ -580,12 +586,24 @@ class GNS3_Conn():
             username = self.username,
             password = self.password
         )
-        ssh.exec_command
+
         scp = SCPClient(ssh.get_transport())
-        scp.get(
-            remote_path = f"/tmp/{project_to_download[0]}",
-            local_path = local_path
-            )
+        print("Trying download file...")
+        try:
+            scp.get(
+                remote_path = f"/tmp/{project_to_download[0]}",
+                local_path = local_path
+                )
+        except:
+            print("Can't download file...")
+            if scp.transport.is_active():
+                print("Closing SCP connection...")
+                scp.close()
+            if ssh.get_transport().is_active():
+                print("Closing SSH connection...")
+                ssh.close()
+            return
+        
         if scp.transport.is_active():
             print("Closing SCP connection...")
             scp.close()
@@ -595,15 +613,18 @@ class GNS3_Conn():
         
         with open(local_path, "br") as f:
             txt = f.read()
+        print("Get local file hash...")
         local_sha1 = hash_sha1(txt)
         local_sha1 = local_sha1.hexdigest()
         
+        print("Compare hash...")
         if local_sha1 != remote_sha1:
             print("Files not equal. Deleting...")
             os_remove(local_path)
             return False
-        
-        return local_path
+        else:
+            print("Correct...")
+            return local_path
 
 
 
@@ -615,26 +636,12 @@ class Data_Parser():
 
 
     def __init__(self):
-        self.nodes = None
         self.links = None
+        self.nodes = None
 
-
-    def get_topology_gns3(self, path):
-        with open(path) as f:
-            _dct_file = json.load(f)
-
-        _dct_links = _dct_file["topology"]["links"] 
-        _dct_nodes = _dct_file["topology"]["nodes"]
-        del dct_file
-
-        self.links = self.get_links_info(_dct_links)
-        self.nodes = self.get_nodes_info(_dct_nodes)
-
-        return 
-    
 
     @staticmethod
-    def get_links_info_gns3(links):
+    def get_links_info(links):
         links_info = []
         for _link in links:
             connection = []
@@ -648,7 +655,7 @@ class Data_Parser():
 
 
     @staticmethod
-    def get_nodes_info_gns3(nodes):
+    def get_nodes_info(nodes):
         nodes_info = []
 
         for _node in nodes:
@@ -674,6 +681,25 @@ class Data_Parser():
             nodes_info.append(tmp_tuple)
 
         return nodes_info
+
+
+    def get_topology_gns3(self, path):
+        with open(path) as f:
+            _dct_file = json.load(f)
+        _dct_links = _dct_file["topology"]["links"] 
+        _dct_nodes = _dct_file["topology"]["nodes"]
+        del _dct_file
+
+        self.links = self.get_links_info(_dct_links)
+        self.nodes = self.get_nodes_info(_dct_nodes)
+
+
+    ## Only for debug purpose.
+    def show_in_file(dct: dict, path: str):
+        from pathlib import Path
+        with open(path, "w") as f:
+            f.write(json.dumps(dct, indent = 4))
+        my_file = Path(path)
 
 
 
