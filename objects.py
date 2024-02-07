@@ -10,15 +10,20 @@ import json
 
 
 
-_lab_ip = "gns3.home"
-_options_lst = [
+server_ip = "gns3.home"
+gns3_serwer_path = "/opt/gns3/projects/"
+main_menu_options_lst = [
     "Show projects from gns3 server.",
     "Set project.",
-    "Execute script.",
-    "Free execute",
+    "Download projects.",
+    "Execute program with download gns3 file.",
+    "Execute program with local gns3 file.",
     "Exit."
 ]
-_local_path = "/tmp/gns3_project.gns3"
+_options_menu_list = [
+
+]
+local_folder_path = "gns3_file/sample_gns3_file.gns3"
 
 
 
@@ -31,168 +36,150 @@ class My_Menu():
                             appere after execute functions 
                             show_menu()
 
-    :param _local_path: Path to the folder on the local
+    :param _local_folder_path: Path to the folder on the local
                             system where the project file 
                             will be downloaded or where it
                             is currently located.
 
-    :param lab_server: Server object. 
+    :param server_object: Server object. 
 
-    :param data_parser: Object Data_Parser. 
+    :param data_parser_object: Object Data_Parser. 
 
-    :param _lab_ip: Server IP. Use to telnet connections 
+    :param _server_ip: Server IP. Use to telnet connections 
                             and for SSH connections.
 
     :param _project_lst: Use later for manage projects.
 
     :param _selected_project: Use later for manage projects.
 
-    :param _system: Useed for check that system with 
+    :param _system_create: Useed for check that system with 
                             devices was already created.
     """
 
-    _system = False
-    _lab_ip = _lab_ip
+    _system_create = False
 
 
     def __init__(self):
-        self._options_lst = _options_lst
-        self._local_path = _local_path
-        self.lab_server = GNS3_Conn(My_Menu._lab_ip)
-        self.data_parser = Data_Parser()
-        self._lab_ip = My_Menu._lab_ip
+        self.main_menu_options_lst = main_menu_options_lst
+        self._local_folder_path = local_folder_path
+        self.server_object = GNS3_Conn()
+        self.data_parser_object = Data_Parser()
         self._project_lst = None
         self._selected_project = None
-        self._system = My_Menu._system
+        self._system_create = My_Menu._system_create
 
 
-    def show_menu(self):
-        """
-        Wyświetl menu z możliwymi opcjami.
-        Menu execute scripts.
-        """
-        print("\n")
-        print("#" * 10, "MENU", "#" * 10, "\n")
+    def show_main_menu(self):
+        print()
+        print("#### MENU ####")
+        print("#")
 
-        for i, option in enumerate(self._options_lst, start = 1):
-            print(f"# {i}) {option}")
+        choice = self.print_menu_and_get_choice(self.main_menu_options_lst)
 
-        chose = input("# Chose option: ")
-
-        if chose == "1":
+        if choice == "1":
             self.show_projects()
 
-        elif chose == "2":
-            self._selected_project = self.set_project()
+        elif choice == "2":
+            self._selected_project = self.select_project()
 
-        elif chose == "3":
-            self.execute_script()
-            sleep(0.5)
+        elif choice == "3":
+            self.get_projects()
 
-        elif chose == "4":
-            self.free_execute()
+        elif choice == "4":
+            self.execute_program_remote()
 
-        elif chose == "5":
+        elif choice == "5":
+            self.execute_program_local()
+
+        elif choice == "6":
             print("Exiting...")
+            sleep(0.5)
             exit()
 
         else: 
-            print("You need to pick valid option...")
+            print("#! You need to pick valid option...")
             sleep(1)
+
+
+    @staticmethod
+    def print_menu_and_get_choice(options_lst):
+        for index, option in enumerate(options_lst, start = 1):
+            print(f"# [{index}] {option}")
+        print("#")
+        choice = input("# > Choose option: ")
+        print("#")
+        return choice
 
 
     def show_projects(self):
         """The function shows list project that are on lab server."""
         if self._project_lst == None:
-            self._project_lst = self.lab_server.get_labs_names()
+            self._project_lst = self.server_object.get_project_lst()
 
-        print("## Project list:", "\n")
+        print("# Project list:", "\n")
 
         for _index, _name in enumerate(self._project_lst, start = 1):
             _tmp_name = _name[0].removesuffix(".gns3")
             print(f"# {_index:02}) {_tmp_name}")
 
-        chose = input("Click any charakter for back to menu...")
+        input("> Click any charakter for back to menu...")
 
         return
 
 
-    def set_project(self):
+    def select_project(self):
         """Function to select a project to download."""
-        print("\n")
-        print("#" * 26)
-        _selected_project = input("# Enter project name or number: ")
+        _selected_project = input("> Enter project name or number: ")
         try:
             self._selected_project = ("number", int(_selected_project))
             return self._selected_project
         except:
             self._selected_project = ("string", _selected_project)
             return self._selected_project
+    
+
+    def get_projects(self):
+        try:
+            self._project_lst = self.server_object.get_project_lst()
+            print("# The projects have been downloaded...")
+        except:
+            print("# Unable to download projects...")
+            return
 
 
-    def execute_script(self):
+    def execute_program_remote(self):
         """
         The main task of this function is to download the project file,
         create configuration files and execute them on appropriate devices.
         """
-        ## Check if project was selected.
-        if self._selected_project == None:
-            return print("You need to select project...")
-        
-        ## If project list don't exist -> download from server.
-        if self._project_lst == None:
-            print("You need to download available projects from the server...")
-            print("Downloading...")
-            self._project_lst = self.lab_server.get_labs_names()
+        validation_selected_project, validation_project_lst = self.valid_selected_project_and_lst()
 
-        if self._selected_project[0] == "string":
-            _project_num = 0
-            _tmp_project = None
-            print("Looking for project...")
+        if not validation_selected_project:
+            return
 
-            for project in self._project_lst:
+        if not validation_project_lst:
+            return
 
-                if self._selected_project[1] in project[0]:
-                    _project_num += 1
-                    _tmp_project = project
+        project_to_download = self.set_projet_to_download()
 
-            if _project_num == 1:
-                _project_to_download = _tmp_project
+        if not project_to_download:
+            return
 
-            elif _project_num > 1:
-                print(
-                    "Too many similar project...\n"
-                    "Pleas be more specific with name or use number..."
-                    )
-                return
-
-            else:
-                print("Can't find project...")
-
-        elif self._selected_project[0] == "number":
-            _project_to_download = self._project_lst[self._selected_project[1] - 1]
-
-        else:
-            print("Error with selected_project ocur....")
-            exit()
-
-        ## Try download project form server.
         try:
-            project_path = self.lab_server.download_project(
-                _project_to_download,
-                self._local_path
+            project_path = self.server_object.download_project(
+                project_to_download,
+                self._local_folder_path
                 )
-            if project_path == False:
-                print("Can't download project to local machine...")
-                return
 
+            if project_path == False:
+                print("#! Can't download project to local machine...")
+                return
         except:
-            return "Can't download project to local machine..."
+            print("#! Can't download project to local machine...")
+            return
 
         try:
-            self.data_parser.get_topology_gns3(project_path)
-            print("Creating device objects...")
-            self.create_system()
+            self.preper_system()
 
             for device in Device.managed_dev_lst:
                 print(f"# Start {device.name}...")
@@ -223,7 +210,7 @@ class My_Menu():
             return "Can't finish executing project..."
 
 
-    def free_execute(self):
+    def execute_program_local(self):
         """
         This function create system and print list with
         configuration without downloading file from lab server.
@@ -231,10 +218,7 @@ class My_Menu():
         print("#" * 26)
 
         try:
-            self.data_parser.get_topology_gns3(self._local_path)
-
-            print("## Creating device objects...")
-            self.create_system()
+            self.preper_system()
 
             for device in Device.managed_dev_lst:
                 print(f"# Start {device.name}...")
@@ -256,11 +240,18 @@ class My_Menu():
             print("Exiting...")
             exit()
 
+    def preper_system(self):
+        self.data_parser_object.set_lab_topology(self._local_folder_path)
+        self.create_system()
 
     def create_system(self):
-        if self._system == False:
-            network_obj = Network(self.data_parser.links)
-            nodes_dct = self.data_parser.nodes
+        """
+        The function creates all device and network objects.
+        """
+        if self._system_create == False:
+            print("## Creating device objects...")
+            network_obj = Network(self.data_parser_object.links)
+            nodes_dct = self.data_parser_object.nodes
             
             for node in nodes_dct:
                 network = network_obj.my_links(node[0])
@@ -268,8 +259,9 @@ class My_Menu():
                 console_port = node[1]
                 name = node[2]
                 adapters_num = node[4]
+                vendor = node[3]
 
-                if "vIOS" == node[3]:
+                if "vIOS" == vendor:
                     IOS(
                         network = network,
                         gns_id = gns_id,
@@ -278,7 +270,7 @@ class My_Menu():
                         adapters_num = adapters_num
                         )
 
-                elif "gns_switch" == node[3]:
+                elif "gns_switch" == vendor:
                     GNS_Switch(
                         network = network,
                         gns_id = gns_id,
@@ -292,18 +284,76 @@ class My_Menu():
                         name = name
                         )
 
-            self._system = True
-            print("Created...")
+            self._system_create = True
+            print("# Created...")
         else:
-            print("System created.")
+            print("# System already created...")
 
         return
 
 
+    def valid_selected_project_and_lst(self):
+        selected_project = True
+        if self._selected_project == None:
+            print("#! You need to select project...")
+            selected_project = False
+
+        project_list = True
+        if self._project_lst == None:
+            print("#! You need to download available projects from the server...")
+            project_list = False
+        return selected_project, project_list
+
+
+
+    def set_projet_to_download(self):
+        """
+        __selected_project = ("number", user_input_number)
+        __selected_project = ("string", user_input_string)
+        """
+
+        if self._selected_project[0] == "number":
+            project_to_download = self._project_lst[self._selected_project[1] - 1]
+            return project_to_download
+        
+        elif self._selected_project[0] == "string":
+            print("# Looking for project...")
+
+            _number_of_project_founds = 0
+            _tmp_selected_project = None
+
+            for project in self._project_lst:
+                if self._selected_project[1] in project[0]:
+                    _number_of_find_projects += 1
+                    _tmp_selected_project = project
+
+            if _number_of_find_projects == 1:
+                project_to_download = _tmp_selected_project
+                return project_to_download
+            
+            elif _number_of_find_projects > 1:
+                print(
+                    "#! Too many similar project...\n"
+                    "#! Pleas be more specific with name or use number..."
+                    )
+                return False
+            else:
+                print("#! Can't find project...")
+                return False
+
+        else:
+            print("#! Error with selected_project ocur....")
+            exit()
+
+
+
+####################
+##### NETWORK ######
+####################
 
 class Network():
     """
-    A network object based on which 
+    A Network object based on which 
     the necessary information about 
     prefixes and free addresses is retrieved.
     """
@@ -387,13 +437,11 @@ class Network():
 ####################
 
 
-
 class Telnet_Conn():
 
-    host_ip = _lab_ip
 
     def __init__(self, devobj):
-        self.host = Telnet_Conn.host_ip
+        self.host = server_ip
         self.port = devobj.console_port
         self.name = devobj.name
         self.username = devobj.username
@@ -408,32 +456,14 @@ class Telnet_Conn():
                 )
             sleep(1)
         except ConnectionRefusedError:
-            print(f"Can't connect to {self.name}...")
-            print("Check if that device is up...")
-            print("Exiting...\n")
+            print(f"#! Can't connect to {self.name}...")
+            print("#! Check if that device is up...")
+            print("#! Passing...\n")
             return
-
-    ## Probably dont needed
-    # def authenticate(self, output):
-    #     if "User" in output or "user" in output:
-    #         self.tc.write(self.username.encode(), b"\n")
-    #         sleep(1)
-    #         self.tc.write(self.password.encode(), b"\n")
-    #     else:
-    #         pass
 
 
     def close(self):
         self.tc.close()
-
-
-    def first_send(self, timeout = 1):
-        self.connect()
-        
-        ## Don't work. Somehow you need to press enter on remote console.
-        self.tc.write(b"\n")
-
-        self.close()
 
 
     def send(self, command, timeout = 0.5):
@@ -470,21 +500,18 @@ class Telnet_Conn():
 class GNS3_Conn():
 
 
-    def __init__(self, lab_ip):
-        self.host = lab_ip
+    def __init__(self):
+        self.host = server_ip
         self.port = "22"
-        self.gns_files_path = "/opt/gns3/projects/"
+        self.gns_files_path = gns3_serwer_path
         self._set_con_parametrs = False
 
     def configure_conn_paramters(self):
         from getpass import getpass
-
-        print("\n")
-        print("#" * 26)
-        print("GNS3 parametr configuration...")
-        self.username = input("Username: ")
-        self.password = getpass("Password: ")
-        self.secret = getpass("Secret: ")
+        print("# GNS3 parametr configuration...")
+        self.username = input("> Username: ")
+        self.password = getpass("> Password: ")
+        self.secret = getpass("> Secret: ")
         self._set_con_parametrs = True
         return
 
@@ -510,19 +537,19 @@ class GNS3_Conn():
                     verbose = False,
                 )
             except NetMikoTimeoutException:
-                print("Can't connect to GNS3 server...")
-                print("Check your connectivity")
-                print("Exiting...\n")
+                print("#! Can't connect to GNS3 server...")
+                print("#! Check your connectivity")
+                print("#! Exiting...\n")
                 exit()
             except NetMikoAuthenticationException:
-                print("Can't connect to GNS3 server...")
-                print("Authentication problem ocur.")
-                print("Exiting...\n")
+                print("#! Can't connect to GNS3 server...")
+                print("#! Authentication problem ocur.")
+                print("#! Exiting...\n")
                 exit()
             except Exception as err:
-                print("Can't connect to GNS3 server...")
-                print(f"Exception cour: {err}")
-                print("Exiting...\n")
+                print("#! Can't connect to GNS3 server...")
+                print(f"#! Exception cour: {err}")
+                print("#! Exiting...\n")
                 exit()
 
 
@@ -535,7 +562,7 @@ class GNS3_Conn():
 
 
     def send(self, command: str):
-        """Simple sending of command """
+        """Simple sending of command"""
         self._connect()
 
         if "sudo" in command:
@@ -547,7 +574,7 @@ class GNS3_Conn():
         return output
 
 
-    def get_labs_names(self):
+    def get_project_lst(self):
         """
         This function returns all project names from gns3 server.
 
@@ -555,58 +582,35 @@ class GNS3_Conn():
         :retur: list with project names.
         """
 
-        def get_folders_name(output):
+        def get_last_vale_from_ls(output):
             """Extract folder names"""
-            tmp_lst = output.splitlines()
-
+            output_lst = output.splitlines()
             lst_folder_names = []
-            for line in tmp_lst[2:]:
+            for line in output_lst[2:]:
                 lst_line = line.split()
                 lst_folder_names.append(lst_line[-1])
-            
             return lst_folder_names
 
-        def create_command_lst(cmd, lst):
-            """
-            Creates a commend list with an extended 
-            path containing folder names
-            """
-            command_lst = []
-
-            for item in lst:
-                command_lst.append(cmd + item + "/")
-
-            return command_lst
-        
-        def extract_project_names(cmd, folders_lst):
-            """
-            Sends command and create list with 
-            project names and parent folder.
-            """
+        def get_project_names(cmd, folders_lst):
             self._connect()
+
             if "sudo" in cmd:
                 self.ssh.enable()
-
             folders = []
             for folder in folders_lst:
-
                 output = self.ssh.send_command(cmd + folder + "/")
-
-                files_lst = get_folders_name(output)
+                files_lst = get_last_vale_from_ls(output)
                 for file in files_lst:
                     if ".gns3" in file and "backup" not in file:
                         folders.append([file, folder])
 
             self._close()
-
             return folders
 
         cmd_path = "sudo ls -l " + self.gns_files_path
-
-        ## Get folder names for gns3/project
         output = self.send(cmd_path)
-        folder_names = get_folders_name(output)
-        project_lst = extract_project_names(cmd_path, folder_names)
+        folder_names = get_last_vale_from_ls(output)
+        project_lst = get_project_names(cmd_path, folder_names)
 
         return project_lst
 
@@ -622,11 +626,12 @@ class GNS3_Conn():
         local_path selected by the user. The hash is checked. If it
         does not match, the file is deleted.
 
-        :param: A project that needs to be downloaded.
-        :param: local_path where a project will be downloaded.
+        :param project_to_download: A project that needs to be downloaded.
+                            project_to_download = (name_of_project, name_of_parent_folder)
+        :param local_path: Local path where a project will be downloaded.
         """
         print(
-            "Start procedure copying project" 
+            "# Start procedure copying project "
             f"to local device to: {local_path}..."
             )
 
@@ -640,17 +645,17 @@ class GNS3_Conn():
             f"/tmp/{project_to_download[0]}"
         )
 
-        print("Remote: Copy to /tmp/...")
+        print("# Remote: Copy to /tmp/...")
         self.send(copy_command)
 
-        print("Remote: Get file hash...")
+        print("# Remote: Get file hash...")
         check_sha1_command = f"sha1sum /tmp/{project_to_download[0]}"
         remote_sha1 = self.send(check_sha1_command)
         remote_sha1 = remote_sha1.split()
         remote_sha1 = remote_sha1[0]
 
         ## SCP implementation. Netmiko don't work like i want.
-        print("Trying download file...")
+        print("# Trying download file...")
         try:
             ssh = SSHClient()
             ssh.load_system_host_keys()
@@ -660,46 +665,45 @@ class GNS3_Conn():
                 password = self.password
             )
         except:
-            print("Can't connect to server...")
+            print("#! Can't connect to server...")
             return False
 
-        scp = SCPClient(ssh.get_transport())
-
         try:
+            scp = SCPClient(ssh.get_transport())
             scp.get(
                 remote_path = f"/tmp/{project_to_download[0]}",
                 local_path = local_path
                 )
         except:
-            print("Can't download file...")
+            print("#! Can't download file...")
             if scp.transport.is_active():
-                print("Closing SCP connection...")
+                print("# Closing SCP connection...")
                 scp.close()
             if ssh.get_transport().is_active():
-                print("Closing SSH connection...")
+                print("# Closing SSH connection...")
                 ssh.close()
             return
         
         if scp.transport.is_active():
-            print("Closing SCP connection...")
+            print("# Closing SCP connection...")
             scp.close()
         if ssh.get_transport().is_active():
-            print("Closing SSH connection...")
+            print("# Closing SSH connection...")
             ssh.close()
         
         with open(local_path, "br") as f:
             txt = f.read()
-        print("Get local file hash...")
+        print("# Get local file hash...")
         local_sha1 = hash_sha1(txt)
         local_sha1 = local_sha1.hexdigest()
         
-        print("Compare hash...")
+        print("# Compare hash...")
         if local_sha1 != remote_sha1:
-            print("Files not equal. Deleting...")
+            print("#! Files not equal. Deleting...")
             os_remove(local_path)
             return False
         else:
-            print("Correct...")
+            print("# Correct...")
             return local_path
 
 
@@ -709,7 +713,9 @@ class GNS3_Conn():
 ####################
 
 class Data_Parser():
-
+    """
+    Parser object. It is used to extract necessary information from the project file.
+    """
 
     def __init__(self):
         self.links = None
@@ -762,7 +768,7 @@ class Data_Parser():
         return nodes_info
 
 
-    def get_topology_gns3(self, path):
+    def set_lab_topology(self, path):
         with open(path) as f:
             _dct_file = json.load(f)
         _dct_links = _dct_file["topology"]["links"] 
@@ -773,19 +779,6 @@ class Data_Parser():
         self.nodes = self.get_nodes_info(_dct_nodes)
 
 
-    ## Only for debug purpose.
-    def show_in_file(self, path: str):
-        from pathlib import Path
-        with open(path, "w") as f:
-            f.write('{ "links": ')
-            f.write(json.dumps(self.nodes, indent = 4))
-            f.write(",\n")
-            f.write('"nodes": ')
-            f.write(json.dumps(self.links, indent = 4))
-            f.write("}")
-        my_file = Path(path)
-
-
 
 ####################
 ##### DEVICES ######
@@ -793,7 +786,10 @@ class Data_Parser():
 
 
 class Device():
-
+    """
+    Basic device object. All devices that do not fit into any
+    subclass of this object are thrown here.
+    """
 
     dev_lst = []
     managed_dev_lst = []
@@ -824,12 +820,12 @@ class Device():
             else:
                 pass
         if number == None:
-            print("Can't create device number. Script will not works...")
-            print("Make sure the lab device name ends with a non-duplicate number")
+            print("#! Can't create device number. Script will not works...")
+            print("#! Make sure the lab device name ends with a non-duplicate number")
             exit()
         elif number in Device.dev_num_lst:
-            print("Can't create device number. Script will not works...")
-            print("Make sure the lab device name ends with a non-duplicate number")
+            print("#! Can't create device number. Script will not works...")
+            print("#! Make sure the lab device name ends with a non-duplicate number")
             exit()
         else:
             Device.dev_num_lst.append(number)
@@ -940,6 +936,7 @@ class Command():
 
     def get_last_interface_name(self):
         """
+        Get name of last interface on device.
         """
         if self.interface_lst_bool == True:
             for link in self.interface_lst:
@@ -951,10 +948,11 @@ class Command():
                 self.get_interface_list()
                 self.get_last_interface_name()
             except:
-                print("Can't create interface list...")
+                print("#! Can't create interface list...")
 
     @staticmethod
     def get_num(gns_id):
+        """The function return device number."""
         for dev in Device.dev_lst:
             if gns_id == dev.gns_id:
 
@@ -973,7 +971,6 @@ class Command():
         :retrun: Switch prefix.
         """
         dev_lst = Device.dev_lst
-
         for dev in dev_lst:
 
             if dev.gns_id == gns_id:
