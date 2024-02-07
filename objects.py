@@ -56,10 +56,10 @@ class My_Menu():
 
         elif chose == "3":
             self.execute_script()
-            sleep(1)
+            sleep(0.5)
 
         elif chose == "4":
-            self.free_execute_test()
+            self.free_execute()
 
         elif chose == "5":
             print("Exiting...")
@@ -70,7 +70,7 @@ class My_Menu():
             sleep(1)
 
 
-    def free_execute_test(self):
+    def free_execute(self):
         print("\n")
         print("#" * 26)
 
@@ -83,7 +83,7 @@ class My_Menu():
             print("Creating device objects...")
             self.create_system()
 
-            for device in Device.dev_lst:
+            for device in Device.managed_dev_lst:
                 print(f"# Start {device.name}...")
                 print("Trying create configuration...")
                 try:
@@ -190,7 +190,7 @@ class My_Menu():
             print("Creating device objects...")
             self.create_system()
 
-            for device in Device.dev_lst:
+            for device in Device.managed_dev_lst:
                 print(f"# Start {device.name}...")
                 try:
                     print("Create telnet connections...")
@@ -749,7 +749,8 @@ class Device():
 
 
     dev_lst = []
-    dev_num = 0
+    managed_dev_lst = []
+    dev_num_lst = []
 
 
     def __init__(
@@ -768,11 +769,24 @@ class Device():
         return self.network.connection_create(self.gns_id)
 
 
-    @classmethod
-    def give_number(cls):
-        cls.dev_num += 1
-        return cls.dev_num 
-
+    def give_number(self):
+        _name = self.name
+        for num in range(len(_name)):
+            if _name[num:].isnumeric():
+                number = _name[num:]
+            else:
+                pass
+        if number == None:
+            print("Can't create device number. Script will not works...")
+            print("Make sure the lab device name ends with a non-duplicate number")
+            exit()
+        elif number in Device.dev_num_lst:
+            print("Can't create device number. Script will not works...")
+            print("Make sure the lab device name ends with a non-duplicate number")
+            exit()
+        else:
+            Device.dev_num_lst.append(number)
+            return number
 
 
 class GNS_Switch(Device):
@@ -819,8 +833,9 @@ class IOS(Device):
         self.adapters_num = adapters_num - 1  ## Count from 0
         self.ip_mgmt = Network.get_ip_address()
         self.ip_mgmt_mask = Network.get_ip_address_mask()
-        self.num = Device.give_number()
+        self.num = self.give_number()
         self.commands = Command_IOS(self)
+        Device.managed_dev_lst.append(self)
 
 
 
@@ -910,7 +925,6 @@ class Command():
         :parm: Switch gns_id,
         :retrun: Switch prefix.
         """
-        print("get_multiacces_prefix-test1")
         dev_lst = Device.dev_lst
 
         for dev in dev_lst:
@@ -1024,7 +1038,6 @@ class Command_IOS(Command):
             f"{Network.ipv4_address_gatway}",
             "end"
             ]
-        print("test")
         return lst_commands
 
 
@@ -1046,12 +1059,12 @@ class Command_IOS(Command):
         lst_commands = ["conf t"]
 
         for connection in self.interface_lst:
-
+            
+            ## "Get the 'num' of the device I'm connected to"
             dev_connect_to_num = self.get_num(connection[1])
-            print(self.num, self.name)
+
             ## If device is conneto to switch:
             if  dev_connect_to_num == None:
-                print("Create_config_interface-test1")
                 lst_commands.append(f"interface {connection[0]}")
                 tmp = (
                     f"ip address "
@@ -1064,7 +1077,6 @@ class Command_IOS(Command):
 
             ## If device is conneto to device with higher number.
             elif dev_connect_to_num > self.num:
-                print("Create_config_interface-test2")
                 lst_commands.append(f"interface {connection[0]}")
                 tmp = (
                     f"ip address 10.{self.num}"
@@ -1076,7 +1088,6 @@ class Command_IOS(Command):
 
             ## If device is conneto to device with lower number.
             elif dev_connect_to_num < self.num:
-                print("Create_config_interface-test3")
                 lst_commands.append(f"interface {connection[0]}")
                 tmp = (
                     f"ip address 10.{dev_connect_to_num}"
