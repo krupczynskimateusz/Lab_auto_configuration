@@ -23,6 +23,33 @@ _local_path = "/tmp/gns3_project.gns3"
 
 
 class My_Menu():
+    """
+    Object Menu is responsible for configuration 
+    management and basic validation.
+
+    :param _options_lst: List of options that will 
+                            appere after execute functions 
+                            show_menu()
+
+    :param _local_path: Path to the folder on the local
+                            system where the project file 
+                            will be downloaded or where it
+                            is currently located.
+
+    :param lab_server: Server object. 
+
+    :param data_parser: Object Data_Parser. 
+
+    :param _lab_ip: Server IP. Use to telnet connections 
+                            and for SSH connections.
+
+    :param _project_lst: Use later for manage projects.
+
+    :param _selected_project: Use later for manage projects.
+
+    :param _system: Useed for check that system with 
+                            devices was already created.
+    """
 
     _system = False
     _lab_ip = _lab_ip
@@ -40,6 +67,10 @@ class My_Menu():
 
 
     def show_menu(self):
+        """
+        Wyświetl menu z możliwymi opcjami.
+        Menu execute scripts.
+        """
         print("\n")
         print("#" * 10, "MENU", "#" * 10, "\n")
 
@@ -70,45 +101,12 @@ class My_Menu():
             sleep(1)
 
 
-    def free_execute(self):
-        print("\n")
-        print("#" * 26)
-
-        project_path = "gns3_file/new_project.json"
-
-        try:
-            self.data_parser.get_topology_gns3(project_path)
-            # self.data_parser.show_in_file("file/free_execute.json")
-
-            print("Creating device objects...")
-            self.create_system()
-
-            for device in Device.managed_dev_lst:
-                print(f"# Start {device.name}...")
-                print("Trying create configuration...")
-                try:
-                    print(device.commands.basic_config())
-                    print(device.commands.ssh_config())
-                    print(device.commands.create_mgmt())
-                    print(device.commands.create_config_interfaces())
-                    print("\n")
-
-                except:
-                    print("Can't create configuration...")
-                    print("\n")
-                    pass
-
-        except:
-            return "Can't finish executing project..."
-
-
     def show_projects(self):
+        """The function shows list project that are on lab server."""
         if self._project_lst == None:
             self._project_lst = self.lab_server.get_labs_names()
 
-        print("\n")
-        print("#" * 26)
-        print("# Project list:", "\n")
+        print("## Project list:", "\n")
 
         for _index, _name in enumerate(self._project_lst, start = 1):
             _tmp_name = _name[0].removesuffix(".gns3")
@@ -119,28 +117,32 @@ class My_Menu():
         return
 
 
-    @classmethod
-    def set_project(cls):
+    def set_project(self):
+        """Function to select a project to download."""
         print("\n")
         print("#" * 26)
-        cls._selected_project = input("# Enter project name or number: ")
+        _selected_project = input("# Enter project name or number: ")
         try:
-            cls._selected_project = ("number", int(cls._selected_project))
-            return cls._selected_project
+            self._selected_project = ("number", int(_selected_project))
+            return self._selected_project
         except:
-            cls._selected_project = ("string", cls._selected_project)
-            return cls._selected_project
+            self._selected_project = ("string", _selected_project)
+            return self._selected_project
 
 
     def execute_script(self):
-        print("\n")
-        print("#" * 26)
-
+        """
+        The main task of this function is to download the project file,
+        create configuration files and execute them on appropriate devices.
+        """
+        ## Check if project was selected.
         if self._selected_project == None:
             return print("You need to select project...")
         
+        ## If project list don't exist -> download from server.
         if self._project_lst == None:
             print("You need to download available projects from the server...")
+            print("Downloading...")
             self._project_lst = self.lab_server.get_labs_names()
 
         if self._selected_project[0] == "string":
@@ -174,12 +176,14 @@ class My_Menu():
             print("Error with selected_project ocur....")
             exit()
 
+        ## Try download project form server.
         try:
             project_path = self.lab_server.download_project(
                 _project_to_download,
                 self._local_path
                 )
             if project_path == False:
+                print("Can't download project to local machine...")
                 return
 
         except:
@@ -194,11 +198,20 @@ class My_Menu():
                 print(f"# Start {device.name}...")
                 try:
                     print("Create telnet connections...")
-                    _tc = Telnet_Conn(device)
-                    ### Add options
+                    try:
+                        _tc = Telnet_Conn(device)
+                    except:
+                        print("Can't create Telnet object...")
+                        pass
+                    
+                    ## Later there will be options to chose what to configure.
+                    print("Set basic config...")
                     _tc.send_lst(device.commands.basic_config())
+                    print("Set ssh configuration..")
                     _tc.send_lst(device.commands.ssh_config())
+                    print("Set managment interface...")
                     _tc.send_lst(device.commands.create_mgmt())
+                    print("Set interface configuration...")
                     _tc.send_lst(device.commands.create_config_interfaces())
 
 
@@ -208,6 +221,40 @@ class My_Menu():
 
         except:
             return "Can't finish executing project..."
+
+
+    def free_execute(self):
+        """
+        This function create system and print list with
+        configuration without downloading file from lab server.
+        """
+        print("#" * 26)
+
+        try:
+            self.data_parser.get_topology_gns3(self._local_path)
+
+            print("## Creating device objects...")
+            self.create_system()
+
+            for device in Device.managed_dev_lst:
+                print(f"# Start {device.name}...")
+                print("Trying create configuration...")
+                try:
+                    print(device.commands.basic_config())
+                    print(device.commands.ssh_config())
+                    print(device.commands.create_mgmt())
+                    print(device.commands.create_config_interfaces())
+                    print("\n")
+
+                except:
+                    print("Can't create configuration...")
+                    print("\n")
+                    pass
+
+        except:
+            print("There was a problem with system creating...")
+            print("Exiting...")
+            exit()
 
 
     def create_system(self):
@@ -435,14 +482,9 @@ class GNS3_Conn():
         print("\n")
         print("#" * 26)
         print("GNS3 parametr configuration...")
-        # self.username = input("Username: ")
-        # self.password = getpass("Password: ")
-        # self.secret = getpass("Secret: ")
-
-        ### Test accout to delete
-        self.username = "mateusz"
-        self.password = "admin123"
-        self.secret = "admin123"
+        self.username = input("Username: ")
+        self.password = getpass("Password: ")
+        self.secret = getpass("Secret: ")
         self._set_con_parametrs = True
         return
 
@@ -607,17 +649,22 @@ class GNS3_Conn():
         remote_sha1 = remote_sha1.split()
         remote_sha1 = remote_sha1[0]
 
-        ## SCP implementation. Netmiko don't work corectly.
-        ssh = SSHClient()
-        ssh.load_system_host_keys()
-        ssh.connect(
-            hostname = self.host,
-            username = self.username,
-            password = self.password
-        )
+        ## SCP implementation. Netmiko don't work like i want.
+        print("Trying download file...")
+        try:
+            ssh = SSHClient()
+            ssh.load_system_host_keys()
+            ssh.connect(
+                hostname = self.host,
+                username = self.username,
+                password = self.password
+            )
+        except:
+            print("Can't connect to server...")
+            return False
 
         scp = SCPClient(ssh.get_transport())
-        print("Trying download file...")
+
         try:
             scp.get(
                 remote_path = f"/tmp/{project_to_download[0]}",
