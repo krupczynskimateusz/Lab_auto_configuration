@@ -1059,44 +1059,44 @@ class Command_IOS(Command):
         lst_commands = ["conf t"]
 
         for connection in self.interface_lst:
-            
-            ## "Get the 'num' of the device I'm connected to"
-            dev_connect_to_num = self.get_num(connection[1])
+            if connection[0] != self.last_interface_name:
+                ## "Get the 'num' of the device I'm connected to"
+                dev_connect_to_num = self.get_num(connection[1])
 
-            ## If device is conneto to switch:
-            if  dev_connect_to_num == None:
-                lst_commands.append(f"interface {connection[0]}")
-                tmp = (
-                    f"ip address "
-                    f"{self.get_multiacces_prefix(connection[1])}"
-                    f".{self.num} "
-                    f"255.255.255.0"
-                    )
-                lst_commands.append(tmp)
-                lst_commands.append("no shutdown")
+                ## If device is conneto to switch:
+                if  dev_connect_to_num == None:
+                    lst_commands.append(f"interface {connection[0]}")
+                    tmp = (
+                        f"ip address "
+                        f"{self.get_multiacces_prefix(connection[1])}"
+                        f".{self.num} "
+                        f"255.255.255.0"
+                        )
+                    lst_commands.append(tmp)
+                    lst_commands.append("no shutdown")
 
-            ## If device is conneto to device with higher number.
-            elif dev_connect_to_num > self.num:
-                lst_commands.append(f"interface {connection[0]}")
-                tmp = (
-                    f"ip address 10.{self.num}"
-                    f".{dev_connect_to_num}.{self.num} "
-                    "255.255.255.0"
-                    )
-                lst_commands.append(tmp)
-                lst_commands.append("no shutdown")
+                ## If device is conneto to device with higher number.
+                elif dev_connect_to_num > self.num:
+                    lst_commands.append(f"interface {connection[0]}")
+                    tmp = (
+                        f"ip address 10.{self.num}"
+                        f".{dev_connect_to_num}.{self.num} "
+                        "255.255.255.0"
+                        )
+                    lst_commands.append(tmp)
+                    lst_commands.append("no shutdown")
 
-            ## If device is conneto to device with lower number.
-            elif dev_connect_to_num < self.num:
-                lst_commands.append(f"interface {connection[0]}")
-                tmp = (
-                    f"ip address 10.{dev_connect_to_num}"
-                    f".{self.num}.{self.num} "
-                    "255.255.255.0"
-                    )
-                    
-                lst_commands.append(tmp)
-                lst_commands.append("no shutdown")
+                ## If device is conneto to device with lower number.
+                elif dev_connect_to_num < self.num:
+                    lst_commands.append(f"interface {connection[0]}")
+                    tmp = (
+                        f"ip address 10.{dev_connect_to_num}"
+                        f".{self.num}.{self.num} "
+                        "255.255.255.0"
+                        )
+                        
+                    lst_commands.append(tmp)
+                    lst_commands.append("no shutdown")
 
         lst_commands.append("end")
         return lst_commands
