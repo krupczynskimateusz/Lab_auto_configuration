@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from telnetlib import Telnet
-from netmiko import ConnectHandler, file_transfer
+from netmiko import ConnectHandler
 from paramiko import SSHClient
 from scp import SCPClient
 from hashlib import sha1 as hash_sha1
@@ -15,6 +15,7 @@ _options_lst = [
     "Show projects from gns3 server.",
     "Set project.",
     "Execute script.",
+    "Free execute",
     "Exit."
 ]
 _local_path = "/tmp/gns3_project.gns3"
@@ -58,12 +59,47 @@ class My_Menu():
             sleep(1)
 
         elif chose == "4":
+            self.free_execute_test()
+
+        elif chose == "5":
             print("Exiting...")
             exit()
 
         else: 
             print("You need to pick valid option...")
             sleep(1)
+
+
+    def free_execute_test(self):
+        print("\n")
+        print("#" * 26)
+
+        project_path = "gns3_file/new_project.json"
+
+        try:
+            self.data_parser.get_topology_gns3(project_path)
+            # self.data_parser.show_in_file("file/free_execute.json")
+
+            print("Creating device objects...")
+            self.create_system()
+
+            for device in Device.dev_lst:
+                print(f"# Start {device.name}...")
+                print("Trying create configuration...")
+                try:
+                    print(device.commands.basic_config())
+                    print(device.commands.ssh_config())
+                    print(device.commands.create_mgmt())
+                    print(device.commands.create_config_interfaces())
+                    print("\n")
+
+                except:
+                    print("Can't create configuration...")
+                    print("\n")
+                    pass
+
+        except:
+            return "Can't finish executing project..."
 
 
     def show_projects(self):
@@ -148,7 +184,7 @@ class My_Menu():
 
         except:
             return "Can't download project to local machine..."
-        project_path = "/tmp/gns3_project.gns3"
+
         try:
             self.data_parser.get_topology_gns3(project_path)
             print("Creating device objects...")
@@ -178,42 +214,35 @@ class My_Menu():
         if self._system == False:
             network_obj = Network(self.data_parser.links)
             nodes_dct = self.data_parser.nodes
+            
             for node in nodes_dct:
                 network = network_obj.my_links(node[0])
                 gns_id = node[0]
                 console_port = node[1]
                 name = node[2]
+                adapters_num = node[4]
 
                 if "vIOS" == node[3]:
                     IOS(
-                        network,
-                        gns_id,
-                        name,
-                        console_port
-                        )
-
-                elif "C7200" == node[3]:
-                    C7200(
-                        network,
-                        gns_id,
-                        name,
-                        console_port
+                        network = network,
+                        gns_id = gns_id,
+                        name = name,
+                        console_port = console_port,
+                        adapters_num = adapters_num
                         )
 
                 elif "gns_switch" == node[3]:
                     GNS_Switch(
-                        network,
-                        gns_id,
-                        name,
-                        console_port
+                        network = network,
+                        gns_id = gns_id,
+                        name = name
                         )
 
                 else:
                     Device(
-                        network,
-                        gns_id,
-                        name,
-                        console_port
+                        network = network,
+                        gns_id = gns_id,
+                        name = name
                         )
 
             self._system = True
@@ -646,11 +675,12 @@ class Data_Parser():
         for _link in links:
             connection = []
             for node in _link["nodes"]:
-                id = node["node_id"]
+                gns_id = node["node_id"]
                 int_name = node["label"]["text"]
-                connection.append((id, int_name))
-            connection_tp = tuple(connection)
-            links_info.append(connection_tp)
+                adapter_num = node["adapter_number"]
+                connection.append((gns_id, int_name, adapter_num))
+            connection = tuple(connection)
+            links_info.append(connection)
         return links_info
 
 
@@ -666,10 +696,12 @@ class Data_Parser():
             if "hda_disk_image" in _node["properties"].keys():
                 if "vios-adventerprisek9" in _node["properties"]["hda_disk_image"]:
                     vendor = "vIOS"
+                    adapters_num = _node["properties"]["adapters"]
 
             elif "image" in _node["properties"].keys():
                 if "c7200-adventerprisek9-mz" in _node["properties"]["image"]:
                     vendor = "C7200"
+                    adapters_num = _node["properties"]["adapters"]
 
             elif "ethernet_switch" in _node["node_type"]:
                 vendor = "gns_switch"
@@ -677,7 +709,7 @@ class Data_Parser():
             else:
                 vendor = None
 
-            tmp_tuple = (gns_id, console_port, node_name, vendor)
+            tmp_tuple = (gns_id, console_port, node_name, vendor, adapters_num)
             nodes_info.append(tmp_tuple)
 
         return nodes_info
@@ -695,10 +727,15 @@ class Data_Parser():
 
 
     ## Only for debug purpose.
-    def show_in_file(dct: dict, path: str):
+    def show_in_file(self, path: str):
         from pathlib import Path
         with open(path, "w") as f:
-            f.write(json.dumps(dct, indent = 4))
+            f.write('{ "links": ')
+            f.write(json.dumps(self.nodes, indent = 4))
+            f.write(",\n")
+            f.write('"nodes": ')
+            f.write(json.dumps(self.links, indent = 4))
+            f.write("}")
         my_file = Path(path)
 
 
@@ -719,20 +756,11 @@ class Device():
             self,
             network: object,
             gns_id: str,
-            name: str,
-            console_port: int,
-            domain: str = "lab.home"
+            name: str
             ):
         self.network = network
         self.gns_id = gns_id
         self.name = name
-        self.console_port = console_port
-        self.vendor = None
-        self.ip_mgmt = None
-        self.ip_mgmt_mask = None
-        self.links = None
-        self.num = None
-        self.ip_domain = domain
         Device.dev_lst.append(self)
 
 
@@ -754,14 +782,12 @@ class GNS_Switch(Device):
             self,
             network: object,
             gns_id: str,
-            name: str,
-            console_port: int
+            name: str
             ):
         super().__init__(
             network,
             gns_id,
-            name,
-            console_port
+            name
             )
         self.vendor = "gns_switch"
         self.multiacces_prefix = Network.get_multiacces_address()
@@ -776,49 +802,25 @@ class IOS(Device):
             network: object,
             gns_id: str,
             name: str,
-            console_port: int
+            console_port: int,
+            adapters_num: int,
+            domain: str = "lab.home"
             ):
         super().__init__(
             network,
             gns_id,
-            name,
-            console_port
+            name
             )
         self.vendor = "vIOS"
+        self.console_port = console_port
+        self.domain = domain
         self.username = "cisco"
         self.password = "cisco"
+        self.adapters_num = adapters_num - 1  ## Count from 0
         self.ip_mgmt = Network.get_ip_address()
         self.ip_mgmt_mask = Network.get_ip_address_mask()
         self.num = Device.give_number()
         self.commands = Command_IOS(self)
-
-
-
-
-class C7200(IOS):
-
-
-    def __init__(
-            self,
-            network: object,
-            gns_id: str,
-            name: str,
-            console_port: int
-            ):
-        super().__init__(
-            network,
-            gns_id,
-            name,
-            console_port
-            )
-        print("Test")
-        self.vendor = "C7200"
-        self.username = "cisco"
-        self.password = "cisco"
-        self.ip_mgmt = Network.get_ip_address()
-        self.ip_mgmt_mask = Network.get_ip_address_mask()
-        self.num = Device.give_number()
-        self.commands = Command_C7200(self)
 
 
 
@@ -843,11 +845,12 @@ class Command():
         self.name = devobj.name
         self.network = devobj.network
         self.num = devobj.num
-        self.ip_domain = devobj.ip_domain
+        self.domain = devobj.domain
+        self.adapters_num = devobj.adapters_num
+        self.interface_lst_bool = False
 
 
-    @staticmethod
-    def links_interface(dev):
+    def get_interface_list(self):
         """
         This function returns interface name and
         gns_id device that interface are connected.
@@ -855,36 +858,49 @@ class Command():
         :parm: Device Object
         :return: List of tuple with int. and device connected to.
         """
+        if self.interface_lst_bool == False:
+            interface_lst = []
+            tmp = 0
 
-        interface_lst = []
-        tmp = 0
+            for link in self.network:
+                if link[tmp][0] == self.gns_id:
+                    interface_lst.append((link[tmp][1], link[tmp + 1][0], link[tmp][2]))
 
-        for link in dev.network:
+                elif link[tmp + 1][0] == self.gns_id:
+                    interface_lst.append((link[tmp + 1][1], link[0][0], link[tmp + 1][2]))
 
-            if link[tmp][0] == dev.gns_id:
-                interface_lst.append((link[tmp][1], link[tmp + 1][0]))
+            self.interface_lst = interface_lst
+            self.interface_lst_bool = True
 
-            elif link[tmp + 1][0] == dev.gns_id:
-                interface_lst.append((link[tmp + 1][1], link[0][0]))
+        else:
+            return
 
-        return interface_lst
 
+    def get_last_interface_name(self):
+        """
+        """
+        if self.interface_lst_bool == True:
+            for link in self.interface_lst:
+
+                if link[2] == self.adapters_num:
+                    self.last_interface_name = link[0]
+        else:
+            try:
+                self.get_interface_list()
+                self.get_last_interface_name()
+            except:
+                print("Can't create interface list...")
 
     @staticmethod
-    def give_dev_num(gns_id):
-        """
-        The function is used to find the number of the device to which we are connected.
-        """
-        dev_lst = Device.dev_lst
+    def get_num(gns_id):
+        for dev in Device.dev_lst:
+            if gns_id == dev.gns_id:
 
-        for dev in dev_lst:
-
-            if dev.gns_id == gns_id:
-                return dev.num
-            
-            else:
-                pass
-
+                if hasattr(dev, 'num'):
+                    return dev.num
+                
+                else:
+                    return None
 
     @staticmethod
     def get_multiacces_prefix(gns_id):
@@ -894,7 +910,7 @@ class Command():
         :parm: Switch gns_id,
         :retrun: Switch prefix.
         """
-        
+        print("get_multiacces_prefix-test1")
         dev_lst = Device.dev_lst
 
         for dev in dev_lst:
@@ -951,7 +967,7 @@ class Command_IOS(Command):
         lst_commands = [
             "conf t",
             f"hostname {self.name}",
-            f"ip domain name {self.ip_domain}",
+            f"ip domain name {self.domain}",
             "username cisco privilege 15 secret cisco",
             "end"
         ]
@@ -974,7 +990,7 @@ class Command_IOS(Command):
             "username cisco",
             "key-hash ssh-rsa 3DDF6DD82060F31277A6004B176786D4",
             "line vty 0 4",
-            "exec-timeout 0 0"
+            "exec-timeout 0 0",
             "transport input ssh",
             "login local",
             "end"
@@ -991,23 +1007,24 @@ class Command_IOS(Command):
 
         :return: List of commands to execute.
         """
-        connections = Command.links_interface(self)
+        self.get_interface_list()
+        self.get_last_interface_name()
+
         lst_commands = [
             "conf t",
             "vrf definition mgmt",
             "address-family ipv4 unicast",
             "exit",
-            f"interface {connections[-1][0]}",
+            f"interface {self.last_interface_name}",
             "vrf forwarding mgmt",
             f"ip address {self.ip_mgmt} {self.get_mask()}",
             "no shutdown",
             "exit",
-
             "ip route vrf mgmt 0.0.0.0 0.0.0.0 "
             f"{Network.ipv4_address_gatway}",
-            
             "end"
             ]
+        print("test")
         return lst_commands
 
 
@@ -1024,38 +1041,45 @@ class Command_IOS(Command):
         
         :return: List of commands to execute.
         """
-        connections = Command.links_interface(self)
+        self.get_interface_list()
+
         lst_commands = ["conf t"]
 
-        for connection in connections[:-1]:
-            num = Command.give_dev_num(connection[1])
+        for connection in self.interface_lst:
 
-            if  num == None:
+            dev_connect_to_num = self.get_num(connection[1])
+            print(self.num, self.name)
+            ## If device is conneto to switch:
+            if  dev_connect_to_num == None:
+                print("Create_config_interface-test1")
                 lst_commands.append(f"interface {connection[0]}")
                 tmp = (
                     f"ip address "
-                    f"{Command.get_multiacces_prefix(connection[1])}"
+                    f"{self.get_multiacces_prefix(connection[1])}"
                     f".{self.num} "
                     f"255.255.255.0"
                     )
                 lst_commands.append(tmp)
                 lst_commands.append("no shutdown")
 
-
-            elif num > self.num:
+            ## If device is conneto to device with higher number.
+            elif dev_connect_to_num > self.num:
+                print("Create_config_interface-test2")
                 lst_commands.append(f"interface {connection[0]}")
                 tmp = (
                     f"ip address 10.{self.num}"
-                    f".{num}.{self.num} "
+                    f".{dev_connect_to_num}.{self.num} "
                     "255.255.255.0"
                     )
                 lst_commands.append(tmp)
                 lst_commands.append("no shutdown")
 
-            elif num < self.num:
+            ## If device is conneto to device with lower number.
+            elif dev_connect_to_num < self.num:
+                print("Create_config_interface-test3")
                 lst_commands.append(f"interface {connection[0]}")
                 tmp = (
-                    f"ip address 10.{num}"
+                    f"ip address 10.{dev_connect_to_num}"
                     f".{self.num}.{self.num} "
                     "255.255.255.0"
                     )
@@ -1081,17 +1105,6 @@ class Command_IOS(Command):
         ]
 
         return lst_commands
-
-
-
-class Command_C7200(Command_IOS):
-    """
-    Subclass of the Command object. 
-    Support for the Cisco c7200 devices.
-    """
-
-    def __init__(self, devobj):
-        super().__init__(devobj)
 
 
 
