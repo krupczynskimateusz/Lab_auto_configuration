@@ -184,30 +184,30 @@ class My_Menu():
             for device in Device.managed_dev_lst:
                 print(f"# Start {device.name}...")
                 try:
-                    print("Create telnet connections...")
+                    print("# Create telnet connections...")
                     try:
                         _tc = Telnet_Conn(device)
                     except:
-                        print("Can't create Telnet object...")
+                        print("# Can't create Telnet object...")
                         pass
                     
                     ## Later there will be options to chose what to configure.
-                    print("Set basic config...")
+                    print("# Set basic config...")
                     _tc.send_lst(device.commands.basic_config())
-                    print("Set ssh configuration..")
+                    print("# Set ssh configuration..")
                     _tc.send_lst(device.commands.ssh_config())
-                    print("Set managment interface...")
+                    print("# Set managment interface...")
                     _tc.send_lst(device.commands.create_mgmt())
-                    print("Set interface configuration...")
+                    print("# Set interface configuration...")
                     _tc.send_lst(device.commands.create_config_interfaces())
 
 
                 except:
-                    print("Can't create telnet connections...")
+                    print("#! Can't create telnet connections...")
                     pass
 
         except:
-            return "Can't finish executing project..."
+            return "#! Can't finish executing project..."
 
 
     def execute_program_local(self):
@@ -222,7 +222,7 @@ class My_Menu():
 
             for device in Device.managed_dev_lst:
                 print(f"# Start {device.name}...")
-                print("Trying create configuration...")
+                print("# Trying create configuration...")
                 try:
                     print(device.commands.basic_config())
                     print(device.commands.ssh_config())
@@ -231,13 +231,13 @@ class My_Menu():
                     print("\n")
 
                 except:
-                    print("Can't create configuration...")
+                    print("#! Can't create configuration...")
                     print("\n")
                     pass
 
         except:
-            print("There was a problem with system creating...")
-            print("Exiting...")
+            print("#! There was a problem with system creating...")
+            print("#! Exiting...")
             exit()
 
     def preper_system(self):
@@ -249,7 +249,7 @@ class My_Menu():
         The function creates all device and network objects.
         """
         if self._system_create == False:
-            print("## Creating device objects...")
+            print("# Creating device objects...")
             network_obj = Network(self.data_parser_object.links)
             nodes_dct = self.data_parser_object.nodes
             
@@ -1047,6 +1047,8 @@ class Command_IOS(Command):
             "ip ssh pubkey-chain",
             "username cisco",
             "key-hash ssh-rsa 3DDF6DD82060F31277A6004B176786D4",
+            "exit",
+            "exit",
             "line vty 0 4",
             "exec-timeout 0 0",
             "transport input ssh",
