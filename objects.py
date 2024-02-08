@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from configparser import ConfigParser
 from telnetlib import Telnet
 from netmiko import ConnectHandler
 from paramiko import SSHClient
@@ -10,17 +11,73 @@ from os.path import isfile as os_isfile
 import json
 
 
-def config_load():
-    from configparser import ConfigParser
 
-    config = ConfigParser()
-    config.read("config.ini")
-    local_folder_path = config["local.setup"]["Lokap_Path"]
-    gns3_serwer_path = "/opt/gns3/projects/"
-    local_folder_path = "gns3_file/sample_gns3_file.gns3"
+class Config_Load():
 
-server_ip, gns3_serwer_path, local_folder_path = config_load()
+    _config = ConfigParser()
 
+
+    def __init__(self):
+        Config_Load._config.read("config.ini")
+        Config_Load.set_up_variable()
+
+    @classmethod
+    def set_up_variable(cls):
+        cls.local_folder_path = cls._config["local_setup"]["Lokal_Path"]
+
+        _server_ip = cls.valid_ipv4_address(
+            cls._config["server_setup"]["IP"],
+            "address",
+            "server_setup|ip"
+            )
+        cls.server_ip = str(_server_ip)
+
+        _gns3_serwer_path = cls._config["serwer_setup"]["Remote_Path"]
+        if _gns3_serwer_path[-1] == "/":
+            cls.gns3_serwer_path = _gns3_serwer_path
+
+        else:
+            cls.gns3_serwer_path = f"{_gns3_serwer_path}/"
+
+        _prefix, _mask = cls.valid_ipv4_address(
+            cls._config["lab_set_up"]["IPv4_Prefix_Managment"],
+            "network",
+            "lab_set_up|IPv4_Prefix_Managment"
+            )
+        cls.ipv4_address_prefix = str(_prefix)
+        cls.ipv4_address_gatway = str(_mask)
+
+        _gateway = cls.valid_ipv4_address(
+            cls._config["lab_set_up"]["IPv4_Gatway_Managment"],
+            "address",
+            "lab_set_up|IPv4_Gatway_Managment"
+            )
+        cls.ipv4_address_prefix = str(_gateway)
+
+
+    @staticmethod
+    def valid_ipv4_address(given_prefix, address_type, comment):
+        from ipaddress import IPv4Network
+
+        if address_type == "address":
+            try:
+                prefix = IPv4Network(given_prefix)
+                return prefix
+            except:
+                print("#! Wrong IPv4 address...")
+                print(f"#! Check: {comment}")
+                exit()
+
+        elif address_type == "network":
+            try:
+                prefix = IPv4Network(given_prefix)
+                address = prefix.network_address()
+                mask = prefix.prefixlen()
+                return address, mask
+            except:
+                print("#! Wrong IPv4 prefix...")
+                print(f"#! Check: {comment}")
+                exit()
 
 
 class My_Menu():
@@ -64,7 +121,7 @@ class My_Menu():
 
     def __init__(self):
         self._main_menu_options_lst = My_Menu._main_menu_options_lst
-        self.local_folder_path = local_folder_path
+        self.local_folder_path = Config_Load.local_folder_path
         self._server_object = GNS3_Conn()
         self.__data_parser_object = Data_Parser()
         self._project_lst = None
@@ -362,9 +419,9 @@ class GNS3_Conn():
     """Manage gns3 connection with server."""
 
     def __init__(self):
-        self.host = server_ip
+        self.host = Config_Load.server_ip
         self.port = "22"
-        self.gns_files_path = gns3_serwer_path
+        self.gns_files_path = Config_Load.gns3_serwer_path
         self._set_con_parametrs = False
 
     def configure_conn_paramters(self):
@@ -648,10 +705,10 @@ class Network():
     ipv4_addresses_pool = [f"192.168.10.{x}" for x in range(11, 40)]
     ipv4_address_gatway = "192.168.10.1"
     ipv4_address_mask = "25"
-    used_addresses = []
+    _used_addresses = []
 
     multiacces_addresses = [f"10.0.{x}.0" for x in range(1, 10)]
-    used_multiacces_addresses = []
+    _used_multiacces_addresses = []
 
 
     def __init__(self, links):
@@ -682,11 +739,11 @@ class Network():
         :return: IPv4 address string.
         """
         ip = cls.ipv4_addresses_pool[device_num - 1]
-        if ip in cls.used_addresses:
+        if ip in cls._used_addresses:
             print("#! Can't give ip address...")
             return None
         else:
-            cls.used_addresses.append(ip)
+            cls._used_addresses.append(ip)
             return ip
 
 
@@ -699,7 +756,7 @@ class Network():
         """
         
         ip = cls.multiacces_addresses[0]
-        cls.used_multiacces_addresses.append(ip)
+        cls._used_multiacces_addresses.append(ip)
         cls.multiacces_addresses.remove(ip)
         return ip
 
@@ -707,16 +764,6 @@ class Network():
     @classmethod
     def get_ip_address_mask(cls):
         return cls.ipv4_address_mask
-
-
-    @staticmethod
-    def show_used_addresses():
-        return Device.used_addresses
-
-
-    @staticmethod
-    def show_free_addresses():
-        return Device.ipv4_addresses_pool
 
 
 
@@ -1105,7 +1152,7 @@ class Telnet_Conn():
     """Manage telnet connection with device."""
 
     def __init__(self, devobj):
-        self.host = server_ip
+        self.host = Config_Load.server_ip
         self.port = devobj.console_port
         self.name = devobj.name
         self.username = devobj.username

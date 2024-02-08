@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
-from objects import My_Menu
+from objects import Config_Load, My_Menu 
 
 
 def main():
+
+    Config_Load()
     menu = My_Menu()
+
     while True:
         menu.show_main_menu()
 
