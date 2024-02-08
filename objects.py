@@ -297,8 +297,6 @@ class My_Menu():
             print("# System already created...")
 
         return
-    
-
 
 
     def valid_selected_project_and_lst(self):
@@ -312,7 +310,6 @@ class My_Menu():
             print("#! You need to download available projects from the server...")
             project_list = False
         return selected_project, project_list
-
 
 
     def set_projet_to_download(self):
@@ -356,160 +353,8 @@ class My_Menu():
 
 
 
-####################
-##### NETWORK ######
-####################
-
-class Network():
-    """
-    A Network object based on which 
-    the necessary information about 
-    prefixes and free addresses is retrieved.
-    """
-
-
-    ipv4_addresses_pool = [f"192.168.10.{x}" for x in range(11, 40)]
-    ipv4_address_gatway = "192.168.10.1"
-    ipv4_address_mask = "25"
-    used_addresses = []
-
-    multiacces_addresses = [f"10.0.{x}.0" for x in range(1, 10)]
-    used_multiacces_addresses = []
-
-
-    def __init__(self, links):
-        self.links = links
-
-
-    def my_links(self, gns_id):
-        """
-        The function returns a list of connections in which the device participates.
-
-        :parm: Device GNS_ID
-        :return: List of links. 
-        """
-        
-        my_links = []
-        for link in self.links:
-            for node in link:
-                if node[0] == gns_id:
-                    my_links.append(link)
-        return my_links
-
-
-    @classmethod
-    def get_ip_address(cls, device_num):
-        """
-        The function give free ip address for managment purpose.
-
-        :return: IPv4 address string.
-        """
-        ip = cls.ipv4_addresses_pool[device_num - 1]
-        if ip in cls.used_addresses:
-            print("#! Can't give ip address...")
-            return None
-        else:
-            cls.used_addresses.append(ip)
-            return ip
-
-
-    @classmethod
-    def get_multiacces_address(cls):
-        """
-        The function give prefix for switch for multiacces purpose. 
-
-        :return: IPv4 address.
-        """
-        
-        ip = cls.multiacces_addresses[0]
-        cls.used_multiacces_addresses.append(ip)
-        cls.multiacces_addresses.remove(ip)
-        return ip
-
-
-    @classmethod
-    def get_ip_address_mask(cls):
-        return cls.ipv4_address_mask
-
-
-    @staticmethod
-    def show_used_addresses():
-        return Device.used_addresses
-
-
-    @staticmethod
-    def show_free_addresses():
-        return Device.ipv4_addresses_pool
-
-
-
-####################
-### CONNECTIONS ####
-####################
-
-
-class Telnet_Conn():
-
-
-    def __init__(self, devobj):
-        self.host = server_ip
-        self.port = devobj.console_port
-        self.name = devobj.name
-        self.username = devobj.username
-        self.password = devobj.password
-
-
-    def connect(self):
-        try:
-            self.tc = Telnet(
-                host = self.host,
-                port = str(self.port)
-                )
-            sleep(1)
-        except ConnectionRefusedError:
-            print(f"#! Can't connect to {self.name}...")
-            print("#! Check if that device is up...")
-            print("#! Passing...\n")
-            return
-
-
-    def close(self):
-        self.tc.close()
-
-
-    def send(self, command, timeout = 0.5):
-        self.connect()
-
-        command = command + "\n"
-        self.tc.write(command.encode())
-        sleep(timeout)
-
-        self.close()
-
-
-    def send_lst(self, commands_lst, timeout = 0.5):
-        self.connect()
-
-        for cmd in commands_lst:
-            if isinstance(cmd, list):
-                command = cmd[0] + "\n"
-                self.tc.write(command.encode())
-                sleep(cmd[1])
-            else:
-                cmd = cmd + "\n"
-                self.tc.write(cmd.encode())
-                sleep(timeout)
-
-        self.close()
-
-
-    def show_all(self):
-        return self.tc.read_all()
-
-
-
 class GNS3_Conn():
-
+    """Manage gns3 connection with server."""
 
     def __init__(self):
         self.host = server_ip
@@ -719,10 +564,6 @@ class GNS3_Conn():
 
 
 
-####################
-##### PARSERS ######
-####################
-
 class Data_Parser():
     """
     Parser object. It is used to extract necessary information from the project file.
@@ -791,9 +632,87 @@ class Data_Parser():
 
 
 
-####################
-##### DEVICES ######
-####################
+class Network():
+    """
+    A Network object based on which 
+    the necessary information about 
+    prefixes and free addresses is retrieved.
+    """
+
+
+    ipv4_addresses_pool = [f"192.168.10.{x}" for x in range(11, 40)]
+    ipv4_address_gatway = "192.168.10.1"
+    ipv4_address_mask = "25"
+    used_addresses = []
+
+    multiacces_addresses = [f"10.0.{x}.0" for x in range(1, 10)]
+    used_multiacces_addresses = []
+
+
+    def __init__(self, links):
+        self.links = links
+
+
+    def my_links(self, gns_id):
+        """
+        The function returns a list of connections in which the device participates.
+
+        :parm: Device GNS_ID
+        :return: List of links. 
+        """
+        
+        my_links = []
+        for link in self.links:
+            for node in link:
+                if node[0] == gns_id:
+                    my_links.append(link)
+        return my_links
+
+
+    @classmethod
+    def get_ip_address(cls, device_num):
+        """
+        The function give free ip address for managment purpose.
+
+        :return: IPv4 address string.
+        """
+        ip = cls.ipv4_addresses_pool[device_num - 1]
+        if ip in cls.used_addresses:
+            print("#! Can't give ip address...")
+            return None
+        else:
+            cls.used_addresses.append(ip)
+            return ip
+
+
+    @classmethod
+    def get_multiacces_address(cls):
+        """
+        The function give prefix for switch for multiacces purpose. 
+
+        :return: IPv4 address.
+        """
+        
+        ip = cls.multiacces_addresses[0]
+        cls.used_multiacces_addresses.append(ip)
+        cls.multiacces_addresses.remove(ip)
+        return ip
+
+
+    @classmethod
+    def get_ip_address_mask(cls):
+        return cls.ipv4_address_mask
+
+
+    @staticmethod
+    def show_used_addresses():
+        return Device.used_addresses
+
+
+    @staticmethod
+    def show_free_addresses():
+        return Device.ipv4_addresses_pool
+
 
 
 class Device():
@@ -892,10 +811,6 @@ class IOS(Device):
         Device.managed_dev_lst.append(self)
 
 
-
-####################
-##### COMANDS ######
-####################
 
 class Command():
     """
@@ -1178,6 +1093,66 @@ class Command_IOS(Command):
         ]
 
         return lst_commands
+
+
+
+class Telnet_Conn():
+    """Manage telnet connection with device."""
+
+    def __init__(self, devobj):
+        self.host = server_ip
+        self.port = devobj.console_port
+        self.name = devobj.name
+        self.username = devobj.username
+        self.password = devobj.password
+
+
+    def connect(self):
+        try:
+            self.tc = Telnet(
+                host = self.host,
+                port = str(self.port)
+                )
+            sleep(1)
+        except ConnectionRefusedError:
+            print(f"#! Can't connect to {self.name}...")
+            print("#! Check if that device is up...")
+            print("#! Passing...\n")
+            return
+
+
+    def close(self):
+        self.tc.close()
+
+
+    def send(self, command, timeout = 0.5):
+        self.connect()
+
+        command = command + "\n"
+        self.tc.write(command.encode())
+        sleep(timeout)
+
+        self.close()
+
+
+    def send_lst(self, commands_lst, timeout = 0.5):
+        self.connect()
+
+        for cmd in commands_lst:
+            if isinstance(cmd, list):
+                command = cmd[0] + "\n"
+                self.tc.write(command.encode())
+                sleep(cmd[1])
+            else:
+                cmd = cmd + "\n"
+                self.tc.write(cmd.encode())
+                sleep(timeout)
+
+        self.close()
+
+
+    def show_all(self):
+        return self.tc.read_all()
 
 
 
