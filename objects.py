@@ -6,6 +6,7 @@ from scp import SCPClient
 from hashlib import sha1 as hash_sha1
 from time import sleep
 from os import remove as os_remove
+from os.path import isfile as os_isfile
 import json
 
 
@@ -13,6 +14,7 @@ import json
 server_ip = "gns3.home"
 gns3_serwer_path = "/opt/gns3/projects/"
 main_menu_options_lst = [
+    "Options menu."
     "Show projects from gns3 server.",
     "Set project.",
     "Download projects.",
@@ -20,8 +22,10 @@ main_menu_options_lst = [
     "Execute program with local gns3 file.",
     "Exit."
 ]
-_options_menu_list = [
-
+options_menu_list = [
+    "Show options.",
+    "Set options."
+    "Exit."
 ]
 local_folder_path = "gns3_file/sample_gns3_file.gns3"
 
@@ -61,6 +65,7 @@ class My_Menu():
 
     def __init__(self):
         self.main_menu_options_lst = main_menu_options_lst
+        self.options_menu_list = options_menu_list
         self._local_folder_path = local_folder_path
         self.server_object = GNS3_Conn()
         self.data_parser_object = Data_Parser()
@@ -70,28 +75,28 @@ class My_Menu():
 
 
     def show_main_menu(self):
-        print()
-        print("#### MENU ####")
-        print("#")
 
         choice = self.print_menu_and_get_choice(self.main_menu_options_lst)
 
         if choice == "1":
+            self.show_options_menu()
+
+        if choice == "2":
             self.show_projects()
 
-        elif choice == "2":
+        elif choice == "3":
             self._selected_project = self.select_project()
 
-        elif choice == "3":
+        elif choice == "4":
             self.get_projects()
 
-        elif choice == "4":
+        elif choice == "5":
             self.execute_program_remote()
 
-        elif choice == "5":
+        elif choice == "6":
             self.execute_program_local()
 
-        elif choice == "6":
+        elif choice == "7":
             print("Exiting...")
             sleep(0.5)
             exit()
@@ -103,6 +108,15 @@ class My_Menu():
 
     @staticmethod
     def print_menu_and_get_choice(options_lst):
+        first_run_app = True
+        if first_run_app == True:
+            print()
+        else:
+            print("#")
+            first_run_app = False
+        print("#### MENU ####")
+        print("#")
+        
         for index, option in enumerate(options_lst, start = 1):
             print(f"# [{index}] {option}")
         print("#")
@@ -139,12 +153,15 @@ class My_Menu():
     
 
     def get_projects(self):
-        try:
-            self._project_lst = self.server_object.get_project_lst()
-            print("# The projects have been downloaded...")
-        except:
-            print("# Unable to download projects...")
-            return
+        if self._project_lst == None:
+            try:
+                self._project_lst = self.server_object.get_project_lst()
+                print("# The projects have been downloaded...")
+            except:
+                print("#! Unable to download projects...")
+                return
+        else:
+            print("# Project already downloaded..")
 
 
     def execute_program_remote(self):
@@ -215,30 +232,32 @@ class My_Menu():
         This function create system and print list with
         configuration without downloading file from lab server.
         """
-        print("#" * 26)
+        if os_isfile(self._local_folder_path):
+            try:
+                self.preper_system()
 
-        try:
-            self.preper_system()
+                for device in Device.managed_dev_lst:
+                    print(f"# Start {device.name}...")
+                    print("# Trying create configuration...")
+                    try:
+                        print(device.commands.basic_config())
+                        print(device.commands.ssh_config())
+                        print(device.commands.create_mgmt())
+                        print(device.commands.create_config_interfaces())
+                        print("\n")
 
-            for device in Device.managed_dev_lst:
-                print(f"# Start {device.name}...")
-                print("# Trying create configuration...")
-                try:
-                    print(device.commands.basic_config())
-                    print(device.commands.ssh_config())
-                    print(device.commands.create_mgmt())
-                    print(device.commands.create_config_interfaces())
-                    print("\n")
+                    except:
+                        print("#! Can't create configuration...")
+                        print("\n")
+                        pass
 
-                except:
-                    print("#! Can't create configuration...")
-                    print("\n")
-                    pass
+            except:
+                print("#! There was a problem with system creating...")
+                print("#! Exiting...")
+                exit()
+        else:
+            print("#! The local file doesn't exist...")
 
-        except:
-            print("#! There was a problem with system creating...")
-            print("#! Exiting...")
-            exit()
 
     def preper_system(self):
         self.data_parser_object.set_lab_topology(self._local_folder_path)
@@ -252,7 +271,6 @@ class My_Menu():
             print("# Creating device objects...")
             network_obj = Network(self.data_parser_object.links)
             nodes_dct = self.data_parser_object.nodes
-            
             for node in nodes_dct:
                 network = network_obj.my_links(node[0])
                 gns_id = node[0]
@@ -290,6 +308,8 @@ class My_Menu():
             print("# System already created...")
 
         return
+    
+
 
 
     def valid_selected_project_and_lst(self):
@@ -389,17 +409,19 @@ class Network():
 
 
     @classmethod
-    def get_ip_address(cls):
+    def get_ip_address(cls, device_num):
         """
         The function give free ip address for managment purpose.
 
         :return: IPv4 address string.
         """
-        
-        ip = cls.ipv4_addresses_pool[0]
-        cls.used_addresses.append(ip)
-        cls.ipv4_addresses_pool.remove(ip)
-        return ip
+        ip = cls.ipv4_addresses_pool[device_num - 1]
+        if ip in cls.used_addresses:
+            print("#! Can't give ip address...")
+            return None
+        else:
+            cls.used_addresses.append(ip)
+            return ip
 
 
     @classmethod
@@ -816,7 +838,7 @@ class Device():
         _name = self.name
         for num in range(len(_name)):
             if _name[num:].isnumeric():
-                number = _name[num:]
+                number = int(_name[num:])
             else:
                 pass
         if number == None:
@@ -874,9 +896,9 @@ class IOS(Device):
         self.username = "cisco"
         self.password = "cisco"
         self.adapters_num = adapters_num - 1  ## Count from 0
-        self.ip_mgmt = Network.get_ip_address()
-        self.ip_mgmt_mask = Network.get_ip_address_mask()
         self.num = self.give_number()
+        self.ip_mgmt = Network.get_ip_address(self.num)
+        self.ip_mgmt_mask = Network.get_ip_address_mask()
         self.commands = Command_IOS(self)
         Device.managed_dev_lst.append(self)
 
@@ -896,19 +918,21 @@ class Command():
 
 
     def __init__(self, devobj):
+        self.network = devobj.network
         self.gns_id = devobj.gns_id
+        self.name = devobj.name
         self.vendor = devobj.vendor
+        self.domain = devobj.domain
+        self.username = devobj.username
+        self.password = devobj.password
+        self.num = devobj.num
         self.ip_mgmt = devobj.ip_mgmt
         self.ip_mgmt_mask = devobj.ip_mgmt_mask
-        self.name = devobj.name
-        self.network = devobj.network
-        self.num = devobj.num
-        self.domain = devobj.domain
         self.adapters_num = devobj.adapters_num
         self.interface_lst_bool = False
 
 
-    def get_interface_list(self):
+    def set_interface_list(self):
         """
         This function returns interface name and
         gns_id device that interface are connected.
@@ -945,7 +969,7 @@ class Command():
                     self.last_interface_name = link[0]
         else:
             try:
-                self.get_interface_list()
+                self.set_interface_list()
                 self.get_last_interface_name()
             except:
                 print("#! Can't create interface list...")
@@ -1026,7 +1050,7 @@ class Command_IOS(Command):
             "conf t",
             f"hostname {self.name}",
             f"ip domain name {self.domain}",
-            "username cisco privilege 15 secret cisco",
+            f"username {self.username} privilege 15 secret {self.password}",
             "end"
         ]
         return lst_commands
@@ -1067,24 +1091,27 @@ class Command_IOS(Command):
 
         :return: List of commands to execute.
         """
-        self.get_interface_list()
+        self.set_interface_list()
         self.get_last_interface_name()
 
-        lst_commands = [
-            "conf t",
-            "vrf definition mgmt",
-            "address-family ipv4 unicast",
-            "exit",
-            f"interface {self.last_interface_name}",
-            "vrf forwarding mgmt",
-            f"ip address {self.ip_mgmt} {self.get_mask()}",
-            "no shutdown",
-            "exit",
-            "ip route vrf mgmt 0.0.0.0 0.0.0.0 "
-            f"{Network.ipv4_address_gatway}",
-            "end"
-            ]
-        return lst_commands
+        if self.ip_mgmt == None:
+            pass
+        else:
+            lst_commands = [
+                "conf t",
+                "vrf definition mgmt",
+                "address-family ipv4 unicast",
+                "exit",
+                f"interface {self.last_interface_name}",
+                "vrf forwarding mgmt",
+                f"ip address {self.ip_mgmt} {self.get_mask()}",
+                "no shutdown",
+                "exit",
+                "ip route vrf mgmt 0.0.0.0 0.0.0.0 "
+                f"{Network.ipv4_address_gatway}",
+                "end"
+                ]
+            return lst_commands
 
 
     def create_config_interfaces(self):
@@ -1100,7 +1127,7 @@ class Command_IOS(Command):
         
         :return: List of commands to execute.
         """
-        self.get_interface_list()
+        self.set_interface_list()
 
         lst_commands = ["conf t"]
 
