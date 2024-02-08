@@ -14,17 +14,11 @@ import json
 server_ip = "gns3.home"
 gns3_serwer_path = "/opt/gns3/projects/"
 main_menu_options_lst = [
-    "Options menu."
     "Show projects from gns3 server.",
     "Set project.",
     "Download projects.",
     "Execute program with download gns3 file.",
     "Execute program with local gns3 file.",
-    "Exit."
-]
-options_menu_list = [
-    "Show options.",
-    "Set options."
     "Exit."
 ]
 local_folder_path = "gns3_file/sample_gns3_file.gns3"
@@ -65,7 +59,6 @@ class My_Menu():
 
     def __init__(self):
         self.main_menu_options_lst = main_menu_options_lst
-        self.options_menu_list = options_menu_list
         self._local_folder_path = local_folder_path
         self.server_object = GNS3_Conn()
         self.data_parser_object = Data_Parser()
@@ -79,26 +72,22 @@ class My_Menu():
         choice = self.print_menu_and_get_choice(self.main_menu_options_lst)
 
         if choice == "1":
-            self.show_options_menu()
-
-        if choice == "2":
             self.show_projects()
 
-        elif choice == "3":
+        elif choice == "2":
             self._selected_project = self.select_project()
 
-        elif choice == "4":
+        elif choice == "3":
             self.get_projects()
 
-        elif choice == "5":
+        elif choice == "4":
             self.execute_program_remote()
 
-        elif choice == "6":
+        elif choice == "5":
             self.execute_program_local()
 
-        elif choice == "7":
+        elif choice == "6":
             print("Exiting...")
-            sleep(0.5)
             exit()
 
         else: 
