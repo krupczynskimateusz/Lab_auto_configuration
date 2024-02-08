@@ -15,44 +15,62 @@ import json
 class Config_Load():
 
     _config = ConfigParser()
-
+    # ipv4_addresses_pool = None
+    # iipv4_address_gatway = None
+    # ipv4_address_mask = None
 
     def __init__(self):
+        print("test")
         Config_Load._config.read("config.ini")
         Config_Load.set_up_variable()
+        print("test")
 
     @classmethod
     def set_up_variable(cls):
         cls.local_folder_path = cls._config["local_setup"]["Lokal_Path"]
+        print(cls.local_folder_path)
 
-        _server_ip = cls.valid_ipv4_address(
-            cls._config["server_setup"]["IP"],
-            "address",
-            "server_setup|ip"
-            )
-        cls.server_ip = str(_server_ip)
+        _server_ip = cls._config["server_setup"]["IP"]
 
-        _gns3_serwer_path = cls._config["serwer_setup"]["Remote_Path"]
+        if cls.check_if_is_domain_name(_server_ip):
+            cls.server_ip = _server_ip
+        else:
+            _server_ip = cls.valid_ipv4_address(
+                cls._config["server_setup"]["IP"],
+                "address",
+                "server_setup|ip"
+                )
+            cls.server_ip = str(_server_ip)
+
+        _gns3_serwer_path = cls._config["server_setup"]["Remote_Path"]
         if _gns3_serwer_path[-1] == "/":
             cls.gns3_serwer_path = _gns3_serwer_path
 
         else:
             cls.gns3_serwer_path = f"{_gns3_serwer_path}/"
 
-        _prefix, _mask = cls.valid_ipv4_address(
+        _prefix, _address, _mask = cls.valid_ipv4_address(
             cls._config["lab_set_up"]["IPv4_Prefix_Managment"],
             "network",
             "lab_set_up|IPv4_Prefix_Managment"
             )
-        cls.ipv4_address_prefix = str(_prefix)
-        cls.ipv4_address_gatway = str(_mask)
+        
+        cls.ipv4_addresses_pool = cls.get_ipv4_address_pool(_prefix, _mask)
+        cls.ipv4_address_mask = str(_mask)
 
         _gateway = cls.valid_ipv4_address(
             cls._config["lab_set_up"]["IPv4_Gatway_Managment"],
             "address",
             "lab_set_up|IPv4_Gatway_Managment"
             )
-        cls.ipv4_address_prefix = str(_gateway)
+        cls.ipv4_address_gatway = str(_gateway)
+
+
+    @staticmethod
+    def check_if_is_domain_name(_server_ip):
+        for sign in _server_ip:
+            if sign.isalpha():
+                return True
 
 
     @staticmethod
@@ -62,22 +80,49 @@ class Config_Load():
         if address_type == "address":
             try:
                 prefix = IPv4Network(given_prefix)
-                return prefix
+                return prefix.network_address
             except:
                 print("#! Wrong IPv4 address...")
                 print(f"#! Check: {comment}")
                 exit()
 
         elif address_type == "network":
+            print("valid_network_test")
             try:
                 prefix = IPv4Network(given_prefix)
-                address = prefix.network_address()
-                mask = prefix.prefixlen()
-                return address, mask
+                address = prefix.network_address
+                mask = prefix.prefixlen
+                return prefix, address, mask
             except:
                 print("#! Wrong IPv4 prefix...")
                 print(f"#! Check: {comment}")
                 exit()
+
+
+    @staticmethod
+    def get_ipv4_address_pool(_prefix, _mask):
+        print("get_ipv4_test")
+        _prefix = str(_prefix)
+        _mask = str(_mask)
+        _prefix = _prefix.removesuffix("/" + _mask)
+
+        _octets_lst = _prefix.split(".")
+        _last_octet = int(_octets_lst[-1])
+        _last_octet += 1
+        while _last_octet % 10 != 0:
+            _last_octet += 1
+
+        ipv4_addresses_pool = []
+        for i in range(1, 33):
+            _ipv4_addresses = (
+                f"{_octets_lst[0]}."
+                f"{_octets_lst[1]}."
+                f"{_octets_lst[2]}."
+                f"{_last_octet + i}"
+                )
+            ipv4_addresses_pool.append(_ipv4_addresses)
+
+        return ipv4_addresses_pool
 
 
 class My_Menu():
@@ -123,7 +168,7 @@ class My_Menu():
         self._main_menu_options_lst = My_Menu._main_menu_options_lst
         self.local_folder_path = Config_Load.local_folder_path
         self._server_object = GNS3_Conn()
-        self.__data_parser_object = Data_Parser()
+        self._data_parser_object = Data_Parser()
         self._project_lst = None
         self._selected_project = None
         self._system_create = My_Menu._system_create
@@ -701,10 +746,10 @@ class Network():
     prefixes and free addresses is retrieved.
     """
 
-
-    ipv4_addresses_pool = [f"192.168.10.{x}" for x in range(11, 40)]
-    ipv4_address_gatway = "192.168.10.1"
-    ipv4_address_mask = "25"
+    set_up = True
+    ipv4_addresses_pool = None
+    ipv4_address_gatway = None
+    ipv4_address_mask = None
     _used_addresses = []
 
     multiacces_addresses = [f"10.0.{x}.0" for x in range(1, 10)]
@@ -713,6 +758,15 @@ class Network():
 
     def __init__(self, links):
         self.links = links
+        if Network.set_up:
+            Network.set_ipv4_addresses()
+
+
+    @classmethod
+    def set_ipv4_addresses(cls):
+        cls.ipv4_addresses_pool = Config_Load.ipv4_addresses_pool
+        cls.ipv4_address_gatway = Config_Load.ipv4_address_gatway
+        cls.ipv4_address_mask = Config_Load.ipv4_address_mask
 
 
     def my_links(self, gns_id):
