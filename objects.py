@@ -13,14 +13,6 @@ import json
 
 server_ip = "gns3.home"
 gns3_serwer_path = "/opt/gns3/projects/"
-main_menu_options_lst = [
-    "Show projects from gns3 server.",
-    "Set project.",
-    "Download projects.",
-    "Execute program with download gns3 file.",
-    "Execute program with local gns3 file.",
-    "Exit."
-]
 local_folder_path = "gns3_file/sample_gns3_file.gns3"
 
 
@@ -30,7 +22,7 @@ class My_Menu():
     Object Menu is responsible for configuration 
     management and basic validation.
 
-    :param _options_lst: List of options that will 
+    :param _main_menu_options_lst: List of options that will 
                             appere after execute functions 
                             show_menu()
 
@@ -39,9 +31,9 @@ class My_Menu():
                             will be downloaded or where it
                             is currently located.
 
-    :param server_object: Server object. 
+    :param _server_object: Server object. 
 
-    :param data_parser_object: Object Data_Parser. 
+    :param _data_parser_object: Object Data_Parser. 
 
     :param _server_ip: Server IP. Use to telnet connections 
                             and for SSH connections.
@@ -55,13 +47,20 @@ class My_Menu():
     """
 
     _system_create = False
-
+    _main_menu_options_lst = [
+        "Show projects from gns3 server.",
+        "Set project.",
+        "Download projects.",
+        "Execute program with download gns3 file.",
+        "Execute program with local gns3 file.",
+        "Exit."
+    ]
 
     def __init__(self):
-        self.main_menu_options_lst = main_menu_options_lst
-        self._local_folder_path = local_folder_path
-        self.server_object = GNS3_Conn()
-        self.data_parser_object = Data_Parser()
+        self._main_menu_options_lst = My_Menu._main_menu_options_lst
+        self.local_folder_path = local_folder_path
+        self._server_object = GNS3_Conn()
+        self.__data_parser_object = Data_Parser()
         self._project_lst = None
         self._selected_project = None
         self._system_create = My_Menu._system_create
@@ -69,55 +68,55 @@ class My_Menu():
 
     def show_main_menu(self):
 
-        choice = self.print_menu_and_get_choice(self.main_menu_options_lst)
+        _choice = self.print_menu_and_get_choice(self._main_menu_options_lst)
 
-        if choice == "1":
+        if _choice == "1":
             self.show_projects()
 
-        elif choice == "2":
+        elif _choice == "2":
             self._selected_project = self.select_project()
 
-        elif choice == "3":
+        elif _choice == "3":
             self.get_projects()
 
-        elif choice == "4":
+        elif _choice == "4":
             self.execute_program_remote()
 
-        elif choice == "5":
+        elif _choice == "5":
             self.execute_program_local()
 
-        elif choice == "6":
+        elif _choice == "6":
             print("Exiting...")
             exit()
 
         else: 
             print("#! You need to pick valid option...")
-            sleep(1)
+            sleep(0.5)
 
 
     @staticmethod
-    def print_menu_and_get_choice(options_lst):
-        first_run_app = True
-        if first_run_app == True:
+    def print_menu_and_get_choice(_options_lst):
+        _first_run_app = True
+        if _first_run_app == True:
             print()
         else:
             print("#")
-            first_run_app = False
+            _first_run_app = False
         print("#### MENU ####")
         print("#")
         
-        for index, option in enumerate(options_lst, start = 1):
-            print(f"# [{index}] {option}")
+        for _index, _option in enumerate(_options_lst, start = 1):
+            print(f"# [{_index}] {_option}")
         print("#")
-        choice = input("# > Choose option: ")
+        _choice = input("# > Choose option: ")
         print("#")
-        return choice
+        return _choice
 
 
     def show_projects(self):
         """The function shows list project that are on lab server."""
         if self._project_lst == None:
-            self._project_lst = self.server_object.get_project_lst()
+            self._project_lst = self._server_object.get_project_lst()
 
         print("# Project list:", "\n")
 
@@ -144,7 +143,7 @@ class My_Menu():
     def get_projects(self):
         if self._project_lst == None:
             try:
-                self._project_lst = self.server_object.get_project_lst()
+                self._project_lst = self._server_object.get_project_lst()
                 print("# The projects have been downloaded...")
             except:
                 print("#! Unable to download projects...")
@@ -158,12 +157,12 @@ class My_Menu():
         The main task of this function is to download the project file,
         create configuration files and execute them on appropriate devices.
         """
-        validation_selected_project, validation_project_lst = self.valid_selected_project_and_lst()
+        _validation_selected_project, _validation_project_lst = self.valid_selected_project_and_lst()
 
-        if not validation_selected_project:
+        if not _validation_selected_project:
             return
 
-        if not validation_project_lst:
+        if not _validation_project_lst:
             return
 
         project_to_download = self.set_projet_to_download()
@@ -172,9 +171,9 @@ class My_Menu():
             return
 
         try:
-            project_path = self.server_object.download_project(
+            project_path = self._server_object.download_project(
                 project_to_download,
-                self._local_folder_path
+                self.local_folder_path
                 )
 
             if project_path == False:
@@ -221,7 +220,7 @@ class My_Menu():
         This function create system and print list with
         configuration without downloading file from lab server.
         """
-        if os_isfile(self._local_folder_path):
+        if os_isfile(self.local_folder_path):
             try:
                 self.preper_system()
 
@@ -249,7 +248,7 @@ class My_Menu():
 
 
     def preper_system(self):
-        self.data_parser_object.set_lab_topology(self._local_folder_path)
+        self._data_parser_object.set_lab_topology(self.local_folder_path)
         self.create_system()
 
     def create_system(self):
@@ -258,8 +257,8 @@ class My_Menu():
         """
         if self._system_create == False:
             print("# Creating device objects...")
-            network_obj = Network(self.data_parser_object.links)
-            nodes_dct = self.data_parser_object.nodes
+            network_obj = Network(self._data_parser_object.links)
+            nodes_dct = self._data_parser_object.nodes
             for node in nodes_dct:
                 network = network_obj.my_links(node[0])
                 gns_id = node[0]
@@ -300,16 +299,16 @@ class My_Menu():
 
 
     def valid_selected_project_and_lst(self):
-        selected_project = True
+        _valid_project = True
         if self._selected_project == None:
             print("#! You need to select project...")
-            selected_project = False
+            _valid_project = False
 
-        project_list = True
+        _valid_project_list = True
         if self._project_lst == None:
             print("#! You need to download available projects from the server...")
-            project_list = False
-        return selected_project, project_list
+            _valid_project_list = False
+        return _valid_project, _valid_project_list
 
 
     def set_projet_to_download(self):
@@ -328,10 +327,10 @@ class My_Menu():
             _number_of_project_founds = 0
             _tmp_selected_project = None
 
-            for project in self._project_lst:
-                if self._selected_project[1] in project[0]:
+            for _project in self._project_lst:
+                if self._selected_project[1] in _project[0]:
                     _number_of_find_projects += 1
-                    _tmp_selected_project = project
+                    _tmp_selected_project = _project
 
             if _number_of_find_projects == 1:
                 project_to_download = _tmp_selected_project
