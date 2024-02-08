@@ -10,10 +10,16 @@ from os.path import isfile as os_isfile
 import json
 
 
+def config_load():
+    from configparser import ConfigParser
 
-server_ip = "gns3.home"
-gns3_serwer_path = "/opt/gns3/projects/"
-local_folder_path = "gns3_file/sample_gns3_file.gns3"
+    config = ConfigParser()
+    config.read("config.ini")
+    local_folder_path = config["local.setup"]["Lokap_Path"]
+    gns3_serwer_path = "/opt/gns3/projects/"
+    local_folder_path = "gns3_file/sample_gns3_file.gns3"
+
+server_ip, gns3_serwer_path, local_folder_path = config_load()
 
 
 
