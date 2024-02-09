@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 from configparser import ConfigParser
 from telnetlib import Telnet
 from netmiko import ConnectHandler
