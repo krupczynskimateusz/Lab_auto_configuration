@@ -20,15 +20,12 @@ class Config_Load():
     # ipv4_address_mask = None
 
     def __init__(self):
-        print("test")
         Config_Load._config.read("config.ini")
         Config_Load.set_up_variable()
-        print("test")
 
     @classmethod
     def set_up_variable(cls):
         cls.local_folder_path = cls._config["local_setup"]["Lokal_Path"]
-        print(cls.local_folder_path)
 
         _server_ip = cls._config["server_setup"]["IP"]
 
@@ -49,7 +46,7 @@ class Config_Load():
         else:
             cls.gns3_serwer_path = f"{_gns3_serwer_path}/"
 
-        _prefix, _address, _mask = cls.valid_ipv4_address(
+        _prefix, _mask = cls.valid_ipv4_address(
             cls._config["lab_set_up"]["IPv4_Prefix_Managment"],
             "network",
             "lab_set_up|IPv4_Prefix_Managment"
@@ -74,53 +71,72 @@ class Config_Load():
 
 
     @staticmethod
-    def valid_ipv4_address(given_prefix, address_type, comment):
+    def valid_ipv4_address(_given_prefix, _address_type, _comment):
         from ipaddress import IPv4Network
 
-        if address_type == "address":
+        if _address_type == "address":
             try:
-                prefix = IPv4Network(given_prefix)
-                return prefix.network_address
+                _prefix = IPv4Network(_given_prefix)
+                return _prefix.network_address
             except:
                 print("#! Wrong IPv4 address...")
-                print(f"#! Check: {comment}")
+                print(f"#! Check: {_comment}")
                 exit()
 
-        elif address_type == "network":
+        elif _address_type == "network":
             print("valid_network_test")
             try:
-                prefix = IPv4Network(given_prefix)
-                address = prefix.network_address
-                mask = prefix.prefixlen
-                return prefix, address, mask
+                _prefix = IPv4Network(_given_prefix)
+                mask = _prefix.prefixlen
+                return _prefix, mask
             except:
                 print("#! Wrong IPv4 prefix...")
-                print(f"#! Check: {comment}")
+                print(f"#! Check: {_comment}")
                 exit()
 
 
     @staticmethod
     def get_ipv4_address_pool(_prefix, _mask):
-        print("get_ipv4_test")
-        _prefix = str(_prefix)
-        _mask = str(_mask)
-        _prefix = _prefix.removesuffix("/" + _mask)
+        def cut_mask(_prefix):
+            _string = str(_prefix)
+            _cut_suffix = _string.removesuffix("/" + _mask)
 
-        _octets_lst = _prefix.split(".")
-        _last_octet = int(_octets_lst[-1])
-        _last_octet += 1
-        while _last_octet % 10 != 0:
+            return _cut_suffix
+        
+        def get_start_address(_octets):
+            _last_octet = int(_octets[-1])
             _last_octet += 1
+
+            while _last_octet % 10 != 0:
+                _last_octet += 1
+
+            return _last_octet
+        
+        def check_if_ip_is_valid(_prefix, ip):
+            _address = _prefix.broadcast_address
+            _octets = _address.split(".")
+            _last_octet = int(_octets[-1])
+            if ip < _last_octet:
+                return True
+            else:
+                return False
+
+        _address = cut_mask(_prefix)
+        _octets = _address.split(".")
+        _start_ip = get_start_address(_octets)
 
         ipv4_addresses_pool = []
         for i in range(1, 33):
-            _ipv4_addresses = (
-                f"{_octets_lst[0]}."
-                f"{_octets_lst[1]}."
-                f"{_octets_lst[2]}."
-                f"{_last_octet + i}"
-                )
-            ipv4_addresses_pool.append(_ipv4_addresses)
+            if check_if_ip_is_valid(_prefix, _start_ip + i):
+                _ipv4_addresses = (
+                    f"{_octets[0]}."
+                    f"{_octets[1]}."
+                    f"{_octets[2]}."
+                    f"{_start_ip + i}"
+                    )
+                ipv4_addresses_pool.append(_ipv4_addresses)
+            else:
+                break
 
         return ipv4_addresses_pool
 
