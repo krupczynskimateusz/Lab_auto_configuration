@@ -52,7 +52,7 @@ class Config_Load():
             "lab_set_up|IPv4_Prefix_Managment"
             )
         
-        cls.ipv4_addresses_pool = cls.get_ipv4_address_pool(_prefix, _mask)
+        cls.ipv4_addresses_pool = cls.get_ipv4_address_pool(_prefix)
         cls.ipv4_address_mask = str(_mask)
 
         _gateway = cls.valid_ipv4_address(
@@ -84,24 +84,34 @@ class Config_Load():
                 exit()
 
         elif _address_type == "network":
-            print("valid_network_test")
             try:
                 _prefix = IPv4Network(_given_prefix)
                 mask = _prefix.prefixlen
-                return _prefix, mask
+                if mask > 29:
+                    print()
+                    print("#! Not enough address space for management. You need to choose bigger mask.")
+                    exit()
+                else:
+                    return _prefix, mask
+                
+            except ValueError as err:
+                print()
+                print(f"#! Error occured: {err}")
+                exit()
             except:
+                print()
                 print("#! Wrong IPv4 prefix...")
                 print(f"#! Check: {_comment}")
                 exit()
 
 
     @staticmethod
-    def get_ipv4_address_pool(_prefix, _mask):
+    def get_ipv4_address_pool(_prefix):
         def cut_mask(_prefix):
             _string = str(_prefix)
-            _cut_suffix = _string.removesuffix("/" + _mask)
+            _cutted_address = _string.removesuffix("/" + str(_prefix.prefixlen))
 
-            return _cut_suffix
+            return _cutted_address
         
         def get_start_address(_octets):
             _last_octet = int(_octets[-1])
@@ -113,7 +123,7 @@ class Config_Load():
             return _last_octet
         
         def check_if_ip_is_valid(_prefix, ip):
-            _address = _prefix.broadcast_address
+            _address = str(_prefix.broadcast_address)
             _octets = _address.split(".")
             _last_octet = int(_octets[-1])
             if ip < _last_octet:
@@ -808,7 +818,16 @@ class Network():
 
         :return: IPv4 address string.
         """
-        ip = cls.ipv4_addresses_pool[device_num - 1]
+
+        try:
+            ip = cls.ipv4_addresses_pool[device_num - 1]
+        except IndexError:
+            print("#! Not enough address space for management. You need to choose bigger mask.")
+            exit()
+        except:
+            print("An error occurred while assigning the management IP address.")
+            exit()
+
         if ip in cls._used_addresses:
             print("#! Can't give ip address...")
             return None
