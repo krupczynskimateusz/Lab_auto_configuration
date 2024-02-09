@@ -13,19 +13,21 @@ Configuration:
   - Hostname setting.
   - Setting the domain "lab.home".
   - Adding user "cisco".
-- ssh_config:
+- Configure SSH:
   - RSA 2048-bit key generation.
   - Setting vty.
-- create_mgmt:
+- Set up management interface:
   - Creates vrf mgmt.
   - Sets the last interface in the created vrf and assigns it an address from the pool of management addresses.
   - Adds a default route for management.
-- create_config_interfaces:
+- Configure interfaces:
   - Assigns an IP address via the device interface:
     - When connecting Router-a to Router-b, the interfaces will be set as follows:
       IP 10.x.y.z, where x is the   lower number of device a or b, y is the higher number of device a or b, and z is the number of the device for which the configuration is generated.
     - In case of connection to multi-access networks (works only for gns3 switch), the interface will receive the address:
       IP 10.0.x.z, where x is the subnet assigned to the switch, and z is the device for which the configuration is generated.
+- Create loopback:
+  - Add interface loopback 0 with address 1.1.1.x, where x is device number. 
 
       
 Plan for the future:

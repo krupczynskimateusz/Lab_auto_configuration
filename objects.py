@@ -1220,11 +1220,10 @@ class Command_IOS(Command):
         The function givs commands to configure
         interface loopback on device. 
         """
-        num = self.num
         lst_commands = [
             "conf t",
             "interface loopback 0",
-            f"ip address 1.1.1.{num} 255.255.255.255",
+            f"ip address 1.1.1.{self.num} 255.255.255.255",
             "end"
         ]
 
