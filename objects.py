@@ -16,9 +16,6 @@ import json
 class Config_Load():
 
     _config = ConfigParser()
-    # ipv4_addresses_pool = None
-    # iipv4_address_gatway = None
-    # ipv4_address_mask = None
 
     def __init__(self):
         Config_Load._config.read("config.ini")
@@ -787,6 +784,7 @@ class Network():
         self.links = links
         if Network.set_up:
             Network.set_ipv4_addresses()
+            Network.set_up = False
 
 
     @classmethod
