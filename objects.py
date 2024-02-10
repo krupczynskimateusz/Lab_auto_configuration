@@ -183,6 +183,7 @@ class My_Menu():
     """
 
     _system_create = False
+    _first_run_app = True
     _main_menu_options_lst = [
         "Show projects from gns3 server.",
         "Set project.",
@@ -232,12 +233,12 @@ class My_Menu():
 
     @staticmethod
     def print_menu_and_get_choice(_options_lst):
-        _first_run_app = True
-        if _first_run_app == True:
+        
+        if My_Menu._first_run_app == True:
             print()
         else:
             print("#")
-            _first_run_app = False
+            My_Menu._first_run_app = False
         print("#### MENU ####")
         print("#")
         
