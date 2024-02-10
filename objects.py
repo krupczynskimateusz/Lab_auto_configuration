@@ -15,50 +15,50 @@ import json
 
 class Config_Load():
 
-    _config = ConfigParser()
 
     def __init__(self):
-        Config_Load._config.read("config.ini")
-        Config_Load.set_up_variable()
+        self._config = ConfigParser()
+        self._config.read("config.ini")
+        self.set_up_variable()
 
-    @classmethod
-    def set_up_variable(cls):
-        cls.local_folder_path = cls._config["local_setup"]["Lokal_Path"]
 
-        _server_ip = cls._config["server_setup"]["IP"]
+    def set_up_variable(self):
+        self.local_folder_path = self._config["local_setup"]["Lokal_Path"]
 
-        if cls.check_if_is_domain_name(_server_ip):
-            cls.server_ip = _server_ip
+        _server_ip = self._config["server_setup"]["IP"]
+
+        if self.check_if_is_domain_name(_server_ip):
+            self.server_ip = _server_ip
         else:
-            _server_ip = cls.valid_ipv4_address(
-                cls._config["server_setup"]["IP"],
+            _server_ip = self.valid_ipv4_address(
+                self._config["server_setup"]["IP"],
                 "address",
                 "server_setup|ip"
                 )
-            cls.server_ip = str(_server_ip)
+            self.server_ip = str(_server_ip)
 
-        _gns3_serwer_path = cls._config["server_setup"]["Remote_Path"]
+        _gns3_serwer_path = self._config["server_setup"]["Remote_Path"]
         if _gns3_serwer_path[-1] == "/":
-            cls.gns3_serwer_path = _gns3_serwer_path
+            self.gns3_serwer_path = _gns3_serwer_path
 
         else:
-            cls.gns3_serwer_path = f"{_gns3_serwer_path}/"
+            self.gns3_serwer_path = f"{_gns3_serwer_path}/"
 
-        _prefix, _mask = cls.valid_ipv4_address(
-            cls._config["lab_set_up"]["IPv4_Prefix_Managment"],
+        _prefix, _mask = self.valid_ipv4_address(
+            self._config["lab_set_up"]["IPv4_Prefix_Managment"],
             "network",
             "lab_set_up|IPv4_Prefix_Managment"
             )
         
-        cls.ipv4_addresses_pool = cls.get_ipv4_address_pool(_prefix)
-        cls.ipv4_address_mask = str(_mask)
+        self.ipv4_addresses_pool = self.get_ipv4_address_pool(_prefix)
+        self.ipv4_address_mask = str(_mask)
 
-        _gateway = cls.valid_ipv4_address(
-            cls._config["lab_set_up"]["IPv4_Gatway_Managment"],
+        _gateway = self.valid_ipv4_address(
+            self._config["lab_set_up"]["IPv4_Gatway_Managment"],
             "address",
             "lab_set_up|IPv4_Gatway_Managment"
             )
-        cls.ipv4_address_gatway = str(_gateway)
+        self.ipv4_address_gatway = str(_gateway)
 
 
     @staticmethod
@@ -149,6 +149,10 @@ class Config_Load():
         return ipv4_addresses_pool
 
 
+
+CONFIG_LOAD = Config_Load()
+
+
 class My_Menu():
     """
     Object Menu is responsible for configuration 
@@ -190,7 +194,7 @@ class My_Menu():
 
     def __init__(self):
         self._main_menu_options_lst = My_Menu._main_menu_options_lst
-        self.local_folder_path = Config_Load.local_folder_path
+        self.local_folder_path = CONFIG_LOAD.local_folder_path
         self._server_object = GNS3_Conn()
         self._data_parser_object = Data_Parser()
         self._project_lst = None
@@ -488,9 +492,9 @@ class GNS3_Conn():
     """Manage gns3 connection with server."""
 
     def __init__(self):
-        self.host = Config_Load.server_ip
+        self.host = CONFIG_LOAD.server_ip
         self.port = "22"
-        self.gns_files_path = Config_Load.gns3_serwer_path
+        self.gns_files_path = CONFIG_LOAD.gns3_serwer_path
         self._set_con_parametrs = False
 
     def configure_conn_paramters(self):
@@ -789,9 +793,9 @@ class Network():
 
     @classmethod
     def set_ipv4_addresses(cls):
-        cls.ipv4_addresses_pool = Config_Load.ipv4_addresses_pool
-        cls.ipv4_address_gatway = Config_Load.ipv4_address_gatway
-        cls.ipv4_address_mask = Config_Load.ipv4_address_mask
+        cls.ipv4_addresses_pool = CONFIG_LOAD.ipv4_addresses_pool
+        cls.ipv4_address_gatway = CONFIG_LOAD.ipv4_address_gatway
+        cls.ipv4_address_mask = CONFIG_LOAD.ipv4_address_mask
 
 
     def my_links(self, gns_id):
@@ -1235,7 +1239,7 @@ class Telnet_Conn():
     """Manage telnet connection with device."""
 
     def __init__(self, devobj):
-        self.host = Config_Load.server_ip
+        self.host = CONFIG_LOAD.server_ip
         self.port = devobj.console_port
         self.name = devobj.name
         self.username = devobj.username
