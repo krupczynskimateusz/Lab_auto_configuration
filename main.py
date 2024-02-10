@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from objects import Config_Load, My_Menu 
-from time import sleep
 
 def main():
 
