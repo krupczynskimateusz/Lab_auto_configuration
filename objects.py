@@ -185,11 +185,11 @@ class My_Menu():
     _system_create = False
     _first_run_app = True
     _main_menu_options_lst = [
-        "Show projects from gns3 server.",
+        "Show projects.",
         "Set project.",
         "Download projects.",
-        "Execute program with download gns3 file.",
-        "Execute program with local gns3 file.",
+        "Execute.",
+        "Execute free.",
         "Exit."
     ]
 
