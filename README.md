@@ -38,10 +38,10 @@ Configuration:
   - Add interface loopback 0 with address 1.1.1.x, where x is device number. 
 
       
-Plan for the future:
-- Automation of authorization using an RSA key.
-- Added options menu with configuration.
-- Added OSPF configuration.
+Plans for the future:
+- Automate authorization using an RSA key.
+- Adding options menu with configuration to choose from.
+- OSPF.
 
 
 Know issue:
