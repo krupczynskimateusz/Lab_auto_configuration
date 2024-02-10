@@ -8,6 +8,14 @@ Currently supports:
   - vIOS
 
 
+Menu:
+- [1] Show projects - shows the list of projects stored on the server.
+- [2] Set project - set project that will be downloaded on local machine to work with it.
+- [3] Download project - projects must be downloaded before script execution.
+- [4] Execute - executes the script. Creates device objects, connects via telnet and prints the necessary commands.
+- [5] Execute free - executes script without server and telnet connection.
+- [6] Exit - exit.
+  
 Configuration:
 - Basic_config:
   - Hostname setting.
