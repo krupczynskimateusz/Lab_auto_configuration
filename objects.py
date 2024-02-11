@@ -1118,7 +1118,6 @@ class Command_IOS(Command):
             "crypto key generate rsa",
             ["2048", 8],
             "ip ssh version 2",
-            "exit",
             "line vty 0 4",
             "exec-timeout 0 0",
             "transport input ssh",
