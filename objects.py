@@ -460,8 +460,8 @@ class My_Menu():
         
         elif self._selected_project[0] == "string":
             print("# Looking for project...")
-
-            _number_of_project_founds = 0
+            print(self._selected_project)
+            _number_of_find_projects = 0
             _tmp_selected_project = None
 
             for _project in self._project_lst:
@@ -589,12 +589,13 @@ class GNS3_Conn():
             if "sudo" in cmd:
                 self.ssh.enable()
             folders = []
-            for folder in folders_lst:
+            for i, folder in enumerate(folders_lst):
                 output = self.ssh.send_command(cmd + folder + "/")
                 files_lst = get_last_vale_from_ls(output)
                 for file in files_lst:
-                    if ".gns3" in file and "backup" not in file:
+                    if ".gns3" in file and ".gns3.backup" not in file:
                         folders.append([file, folder])
+            
 
             self._close()
             return folders
