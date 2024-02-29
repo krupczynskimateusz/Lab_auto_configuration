@@ -1,4 +1,5 @@
 # Lab managment
+## 4FUN
 Script for uploading basic startup configuration to devices in the created laboratory like turn on ssh, configure interfaces for connectivity etc. 
 
 Currently supports:
